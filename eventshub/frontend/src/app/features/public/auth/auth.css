@@ -1,0 +1,34 @@
+/* Effetto zoom lento e cinematico sulla copertina */
+.zoom-effect {
+  animation: slowZoom 20s ease-in-out infinite alternate;
+}
+
+@keyframes slowZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+/* Animazione fluida di ingresso per la Card */
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stile custom per le checkbox native */
+input[type="checkbox"] {
+  accent-color: #4f46e5;
+}

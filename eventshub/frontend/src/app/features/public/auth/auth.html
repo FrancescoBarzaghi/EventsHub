@@ -1,0 +1,143 @@
+<div class="flex min-h-screen bg-slate-50 font-sans antialiased">
+  
+  <div class="hidden lg:flex lg:w-1/2 relative items-center justify-center p-16 overflow-hidden bg-slate-900">
+    <div class="absolute inset-0 bg-cover bg-center opacity-40 zoom-effect" 
+         style="background-image: url('https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80');">
+    </div>
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/90 via-purple-700/80 to-slate-900/95 mix-blend-multiply"></div>
+    
+    <div class="relative z-10 max-w-md text-left space-y-6">
+      <div class="inline-flex p-3 bg-white/10 rounded-2xl backdrop-blur-md border border-white/20 shadow-inner">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8 text-white">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+        </svg>
+      </div>
+      <h1 class="text-4xl font-extrabold tracking-tight text-white leading-tight font-display">
+        Scopri, partecipa e organizza eventi unici.
+      </h1>
+      <p class="text-indigo-100 text-lg leading-relaxed font-normal">
+        Unisciti alla community di EventHub per gestire i tuoi biglietti, seguire i tuoi organizzatori preferiti e non perdere mai i meetup locali.
+      </p>
+      <div class="flex items-center gap-3 pt-4">
+        <div class="h-1.5 rounded-full bg-white transition-all duration-300" [ngClass]="isLoginMode ? 'w-8 bg-white' : 'w-2 opacity-40'"></div>
+        <div class="h-1.5 rounded-full bg-white transition-all duration-300" [ngClass]="!isLoginMode ? 'w-8 bg-white' : 'w-2 opacity-40'"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 md:p-20">
+    <div class="w-full max-w-md space-y-8 bg-white p-8 sm:p-10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.03)] border border-slate-100 animate-fadeIn">
+      
+      <div class="flex flex-col items-center text-center space-y-2">
+        <div class="text-2xl font-black tracking-tighter text-indigo-600 mb-1">Event<span class="text-slate-800">Hub</span></div>
+        <h2 class="text-2xl font-bold tracking-tight text-slate-900">
+          {{ isLoginMode ? 'Accedi al tuo account' : 'Crea un account gratuito' }}
+        </h2>
+        <p class="text-sm text-slate-500 font-medium">
+          {{ isLoginMode ? 'Nuovo su EventHub?' : 'Hai già un profilo attivo?' }}
+          <button (click)="toggleMode()" type="button" class="font-semibold text-indigo-600 hover:text-indigo-500 transition ml-0.5 bg-transparent border-none cursor-pointer">
+            {{ isLoginMode ? 'Registrati ora' : 'Fai il login' }}
+          </button>
+        </p>
+      </div>
+
+      <div *ngIf="errorMessage" class="flex items-center gap-3 p-4 bg-rose-50 text-rose-700 text-sm rounded-xl font-medium border border-rose-100 animate-fadeIn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-rose-500 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+      <div *ngIf="successMessage" class="flex items-center gap-3 p-4 bg-emerald-50 text-emerald-700 text-sm rounded-xl font-medium border border-emerald-100 animate-fadeIn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-emerald-500 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <form *ngIf="isLoginMode" class="space-y-5" [formGroup]="loginForm" (ngSubmit)="onLoginSubmit()">
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Username</label>
+          <div class="relative flex items-center group rounded-xl border border-slate-200 bg-slate-50/50 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 transition duration-200">
+            <div class="absolute left-3.5 text-slate-400 group-focus-within:text-indigo-500 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+            </div>
+            <input formControlName="username" type="text" placeholder="Inserisci lo username" class="w-full bg-transparent p-3 pl-11 text-sm text-slate-900 font-medium placeholder:text-slate-400 outline-none">
+          </div>
+          <span *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.invalid" class="text-xs text-rose-500 font-medium block pl-1">Minimo 3 caratteri richiesti.</span>
+        </div>
+        
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Password</label>
+          <div class="relative flex items-center group rounded-xl border border-slate-200 bg-slate-50/50 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 transition duration-200">
+            <div class="absolute left-3.5 text-slate-400 group-focus-within:text-indigo-500 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+            </div>
+            <input formControlName="password" type="password" placeholder="••••••••" class="w-full bg-transparent p-3 pl-11 text-sm text-slate-900 font-medium placeholder:text-slate-400 outline-none">
+          </div>
+          <span *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="text-xs text-rose-500 font-medium block pl-1">Minimo 6 caratteri richiesti.</span>
+        </div>
+
+        <div class="flex items-center justify-between text-sm pt-1">
+          <label class="flex items-center gap-2 text-slate-600 font-medium cursor-pointer select-none">
+            <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+            Ricordami
+          </label>
+          <a class="font-semibold text-indigo-600 hover:text-indigo-500 cursor-pointer">Password dimenticata?</a>
+        </div>
+
+        <button [disabled]="loginForm.invalid" type="submit" class="w-full flex justify-center items-center rounded-xl bg-indigo-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/10 hover:bg-indigo-500 active:scale-[0.99] disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 mt-6">
+          Accedi al Profilo
+        </button>
+      </form>
+
+      <form *ngIf="!isLoginMode" class="space-y-4" [formGroup]="registerForm" (ngSubmit)="onRegisterSubmit()">
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Username</label>
+          <div class="relative flex items-center group rounded-xl border border-slate-200 bg-slate-50/50 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 transition duration-200">
+            <div class="absolute left-3.5 text-slate-400 group-focus-within:text-indigo-500 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+            </div>
+            <input formControlName="username" type="text" placeholder="Scegli uno username" class="w-full bg-transparent p-3 pl-11 text-sm text-slate-900 font-medium placeholder:text-slate-400 outline-none">
+          </div>
+          <span *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.invalid" class="text-xs text-rose-500 font-medium block pl-1">Richiesto (min 3 caratteri).</span>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Indirizzo Email</label>
+          <div class="relative flex items-center group rounded-xl border border-slate-200 bg-slate-50/50 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 transition duration-200">
+            <div class="absolute left-3.5 text-slate-400 group-focus-within:text-indigo-500 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5H4.5a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
+            </div>
+            <input formControlName="email" type="email" placeholder="esempio@dominio.com" class="w-full bg-transparent p-3 pl-11 text-sm text-slate-900 font-medium placeholder:text-slate-400 outline-none">
+          </div>
+          <span *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" class="text-xs text-rose-500 font-medium block pl-1">Fornire una mail valida.</span>
+        </div>
+        
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Password</label>
+          <div class="relative flex items-center group rounded-xl border border-slate-200 bg-slate-50/50 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 transition duration-200">
+            <div class="absolute left-3.5 text-slate-400 group-focus-within:text-indigo-500 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+            </div>
+            <input formControlName="password" type="password" placeholder="Minimo 6 caratteri" class="w-full bg-transparent p-3 pl-11 text-sm text-slate-900 font-medium placeholder:text-slate-400 outline-none">
+          </div>
+          <span *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" class="text-xs text-rose-500 font-medium block pl-1">Troppo corta (min 6).</span>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Tipo di Profilo</label>
+          <div class="relative flex items-center rounded-xl border border-slate-200 bg-slate-50/50 focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 transition duration-200">
+            <select formControlName="role" class="w-full bg-transparent p-3 text-sm text-slate-900 font-semibold appearance-none outline-none cursor-pointer">
+              <option value="user">🎟️ Partecipante (Cerca e prenota)</option>
+              <option value="organizer">💼 Organizzatore (Crea e gestisce)</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+              <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <button [disabled]="registerForm.invalid" type="submit" class="w-full flex justify-center items-center rounded-xl bg-emerald-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/10 hover:bg-emerald-500 active:scale-[0.99] disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 mt-6">
+          Crea Account Gratuito
+        </button>
+      </form>
+
+    </div>
+  </div>
+</div>
