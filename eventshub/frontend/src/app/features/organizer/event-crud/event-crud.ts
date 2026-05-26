@@ -2,12 +2,12 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
-import { Footer } from '../../../shared/components/footer/footer';
+import { FooterComponent } from '../../../shared/components/footer/footer';
 
 @Component({
   selector: 'app-event-crud',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, Footer],
+  imports: [CommonModule, FormsModule, LucideAngularModule, FooterComponent],
   templateUrl: './event-crud.html'
 })
 export class EventCrudComponent {
@@ -16,7 +16,6 @@ export class EventCrudComponent {
     { id: 2, title: 'Conferenza Tech Innovation', category: 'Tecnologia', date: '2025-05-20', price: 120, sold: 58 }
   ];
 
-  // Campi inserimento nuovo record
   title = '';
   category = 'Musica';
   date = '';
@@ -32,7 +31,6 @@ export class EventCrudComponent {
       price: this.price,
       sold: 0
     });
-    // Ripristina campi form
     this.title = '';
     this.date = '';
     this.price = 0;

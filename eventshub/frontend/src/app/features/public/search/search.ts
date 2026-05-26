@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { EventCard} from '../../../shared/components/event-card/event-card';
+import { EventCardComponent } from '../../../shared/components/event-card/event-card';
 import { FooterComponent } from '../../../shared/components/footer/footer';
 
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, LucideAngularModule, EventCard, FooterComponent],
+  imports: [CommonModule, FormsModule, RouterModule, LucideAngularModule, EventCardComponent, FooterComponent],
   templateUrl: './search.html'
 })
 export class SearchComponent implements OnInit {
@@ -61,4 +61,3 @@ export class SearchComponent implements OnInit {
     this.selectedLocation = 'Tutte';
   }
 }
-

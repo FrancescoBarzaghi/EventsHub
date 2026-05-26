@@ -1,4 +1,4 @@
-import { Component } from '@angular/typescript';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
@@ -22,4 +22,3 @@ export class ProfileComponent {
     setTimeout(() => this.saveSuccess = false, 3000);
   }
 }
-

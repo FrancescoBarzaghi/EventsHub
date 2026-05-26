@@ -2,16 +2,15 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { Footer } from '../../../shared/components/footer/footer';
+import { FooterComponent } from '../../../shared/components/footer/footer';
 
 @Component({
   selector: 'app-organizer-stats',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule, Footer],
+  imports: [CommonModule, RouterModule, LucideAngularModule, FooterComponent],
   templateUrl: './dashboard-stats.html'
 })
 export class DashboardStatsComponent {
-  // Metriche estratte dal prototipo
   stats = {
     totalRevenue: '4,850',
     ticketsSold: '142',

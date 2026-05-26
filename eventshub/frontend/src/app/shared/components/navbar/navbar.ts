@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule],
   templateUrl: './navbar.html'
 })
 export class NavbarComponent {
@@ -23,7 +24,7 @@ export class NavbarComponent {
     }
   }
 
-  setRole(role: 'public' | 'user' | 'organizer' | 'admin') {
+  setRole(role: any) {
     this.currentRole = role;
   }
 
@@ -31,4 +32,3 @@ export class NavbarComponent {
     this.currentRole = 'public';
   }
 }
-

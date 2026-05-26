@@ -1,6 +1,14 @@
+import 'zone.js';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
-import { App } from './app/app';
+import { AppComponent } from './app/app';
 
-bootstrapApplication(App, appConfig)
+// Importa le funzioni di localizzazione di Angular e i dati per l'italiano
+import { registerLocaleData } from '@angular/common';
+import localeIt from '@angular/common/locales/it';
+
+// Registra la lingua italiana globalmente nell'app
+registerLocaleData(localeIt, 'it-IT');
+
+bootstrapApplication(AppComponent, appConfig)
   .catch((err) => console.error(err));
