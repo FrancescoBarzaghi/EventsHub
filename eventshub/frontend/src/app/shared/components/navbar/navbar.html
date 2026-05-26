@@ -1,1 +1,98 @@
-<p>navbar works!</p>
+<nav class="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex h-16 items-center justify-between">
+      
+      <div class="flex items-center gap-8">
+        <a routerLink="/" class="flex items-center gap-2 text-xl font-bold font-serif-title tracking-tight text-foreground">
+          <lucide-icon name="calendar" class="h-6 w-6 text-primary"></lucide-icon>
+          <span>EventHub</span>
+        </a>
+        <div class="hidden md:flex items-center gap-6">
+          <a routerLink="/" routerLinkActive="text-foreground" [routerLinkActiveOptions]="{exact: true}" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Home</a>
+          <a routerLink="/search" routerLinkActive="text-foreground" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Cerca Eventi</a>
+        </div>
+      </div>
+
+      <div class="hidden md:flex items-center gap-4">
+        
+        <select [ngModel]="currentRole" (ngModelChange)="setRole($event)" class="text-xs bg-muted border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring">
+          <option value="public">Vista: Pubblico</option>
+          <option value="user">Vista: Utente</option>
+          <option value="organizer">Vista: Organizzatore</option>
+          <option value="admin">Vista: Admin</option>
+        </select>
+
+        <button (click)="toggleDarkMode()" class="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
+          <lucide-icon [name]="darkMode ? 'sun' : 'moon'" class="h-4 w-4"></lucide-icon>
+        </button>
+
+        @if (currentRole === 'public') {
+          <button routerLink="/login" class="text-sm font-medium hover:text-primary transition-colors h-9 px-4 py-2">Accedi</button>
+          <button routerLink="/login" class="bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors h-9 px-4 py-2 shadow-sm">Registrati</button>
+        } @else {
+          
+          @if (currentRole === 'user') {
+            <button routerLink="/user/dashboard" class="inline-flex items-center gap-2 text-sm font-medium hover:bg-accent h-9 px-4 py-2 rounded-md transition-colors">
+              <lucide-icon name="ticket" class="h-4 w-4"></lucide-icon>
+              <span>I Miei Biglietti</span>
+            </button>
+          }
+
+          @if (currentRole === 'organizer') {
+            <button routerLink="/organizer/dashboard-stats" class="inline-flex items-center gap-2 text-sm font-medium hover:bg-accent h-9 px-4 py-2 rounded-md transition-colors">
+              <lucide-icon name="bar-chart-3" class="h-4 w-4"></lucide-icon>
+              <span>Dashboard</span>
+            </button>
+            <button routerLink="/organizer/event-crud" class="inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 h-9 px-4 py-2 transition-colors">
+              <lucide-icon name="plus-circle" class="h-4 w-4"></lucide-icon>
+              <span>Crea Evento</span>
+            </button>
+          }
+
+          @if (currentRole === 'admin') {
+            <button routerLink="/admin/moderation" class="inline-flex items-center gap-2 border border-destructive/30 text-destructive hover:bg-destructive/10 text-sm font-medium rounded-md h-9 px-4 py-2 transition-colors">
+              <lucide-icon name="shield" class="h-4 w-4"></lucide-icon>
+              <span>Admin Area</span>
+            </button>
+          }
+
+          <div class="flex items-center gap-2 ml-2 border-l border-border pl-4">
+            <button routerLink="/user/profile" class="h-8 w-8 rounded-full bg-muted border border-border flex items-center justify-center font-bold text-xs uppercase text-foreground hover:opacity-80 transition-opacity">
+              {{ currentRole.substring(0,2) }}
+            </button>
+            <button (click)="logout()" class="p-2 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
+              <lucide-icon name="log-out" class="h-4 w-4"></lucide-icon>
+            </button>
+          </div>
+        }
+
+      </div>
+
+      <div class="flex md:hidden items-center gap-2">
+        <button (click)="toggleDarkMode()" class="p-2 rounded-md hover:bg-accent text-muted-foreground">
+          <lucide-icon [name]="darkMode ? 'sun' : 'moon'" class="h-4 w-4"></lucide-icon>
+        </button>
+        <button (click)="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-md hover:bg-accent text-muted-foreground">
+          <lucide-icon [name]="mobileMenuOpen ? 'x' : 'menu'" class="h-5 w-5"></lucide-icon>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  @if (mobileMenuOpen) {
+    <div class="md:hidden border-b border-border bg-background px-4 py-3 space-y-1">
+      <a routerLink="/" (click)="mobileMenuOpen = false" class="block rounded-md px-3 py-2 text-base font-medium hover:bg-accent">Home</a>
+      <a routerLink="/search" (click)="mobileMenuOpen = false" class="block rounded-md px-3 py-2 text-base font-medium hover:bg-accent">Cerca Eventi</a>
+      <div class="border-t border-border my-2 pt-2">
+        @if (currentRole === 'public') {
+          <button routerLink="/login" (click)="mobileMenuOpen = false" class="w-full text-left rounded-md px-3 py-2 text-base font-medium hover:bg-accent">Accedi</button>
+          <button routerLink="/login" (click)="mobileMenuOpen = false" class="w-full text-center bg-primary text-primary-foreground rounded-md py-2 text-base font-medium mt-1">Registrati</button>
+        } @else {
+          <button (click)="logout(); mobileMenuOpen = false" class="w-full text-left text-destructive rounded-md px-3 py-2 text-base font-medium hover:bg-destructive/10">Disconnetti</button>
+        }
+      </div>
+    </div>
+  }
+</nav>
+

@@ -1,1 +1,42 @@
-<p>event-card works!</p>
+Incolla il layout con l'effetto ingrandimento morbido (group-hover:scale-105) sull'immagine di copertina e il badge stondato:
+HTML
+<div [routerLink]="['/event', event.id]" class="group flex flex-col h-full overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm hover:shadow-md transition-all cursor-pointer">
+  
+  <div class="relative w-full h-48 overflow-hidden bg-muted">
+    <img [src]="event.image" [alt]="event.title" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+    <div class="absolute top-3 right-3 inline-flex items-center rounded-full border border-border bg-background/95 px-2.5 py-0.5 text-xs font-semibold text-foreground shadow-sm backdrop-blur-sm">
+      {{ event.category }}
+    </div>
+  </div>
+
+  <div class="p-5 flex flex-col flex-1 justify-between">
+    <div>
+      <h3 class="font-bold text-xl tracking-tight line-clamp-2 group-hover:text-primary transition-colors mb-2">
+        {{ event.title }}
+      </h3>
+      
+      <div class="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+        <span class="flex items-center gap-1 font-medium text-foreground">
+          <lucide-icon name="star" class="h-4 w-4 fill-yellow-400 text-yellow-400"></lucide-icon>
+          {{ event.rating }}
+        </span>
+        <span class="flex items-center gap-1">
+          <lucide-icon name="map-pin" class="h-4 w-4"></lucide-icon>
+          {{ event.location }}
+        </span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between border-t border-border pt-4 mt-auto">
+      <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <lucide-icon name="clock" class="h-3.5 w-3.5"></lucide-icon>
+        <span>{{ event.date | date:'dd MMM yyyy':'':'it-IT' }}</span>
+      </div>
+      <span class="text-lg font-bold text-primary">
+        {{ event.price === 0 ? 'Gratis' : '€' + event.price }}
+      </span>
+    </div>
+
+  </div>
+</div>
+
