@@ -1,1 +1,114 @@
-<p>event-detail works!</p>
+<div class="min-h-screen bg-background flex flex-col justify-between" *ngIf="event">
+  <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <div class="relative h-[320px] md:h-[400px] w-full overflow-hidden rounded-xl bg-muted border border-border shadow-sm mb-8">
+      <img [src]="event.image" [alt]="event.title" class="w-full h-full object-cover" />
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+      <div class="absolute bottom-6 left-6 text-white space-y-2">
+        <span class="inline-flex bg-primary/90 text-primary-foreground text-xs px-2.5 py-0.5 rounded-full font-semibold">{{ event.category }}</span>
+        <h1 class="text-3xl md:text-4xl font-extrabold font-serif-title tracking-tight">{{ event.title }}</h1>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <div class="lg:col-span-2 space-y-8">
+        <div class="bg-card text-card-foreground p-6 rounded-lg border border-border shadow-sm space-y-4">
+          <h3 class="text-xl font-bold tracking-tight">Informazioni sull'evento</h3>
+          <p class="text-muted-foreground leading-relaxed text-sm">{{ event.desc }}</p>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-border pt-4 text-sm text-foreground">
+            <div class="flex items-center gap-3">
+              <lucide-icon name="map-pin" class="h-5 w-5 text-muted-foreground"></lucide-icon>
+              <div>
+                <p class="font-semibold">Luogo</p>
+                <p class="text-muted-foreground text-xs">{{ event.location }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <lucide-icon name="user" class="h-5 w-5 text-muted-foreground"></lucide-icon>
+              <div>
+                <p class="font-semibold">Organizzatore</p>
+                <p class="text-muted-foreground text-xs">{{ event.organizer }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <h3 class="text-2xl font-bold font-serif-title tracking-tight flex items-center gap-2">
+            <lucide-icon name="star" class="h-5 w-5 text-yellow-500 fill-yellow-500"></lucide-icon>
+            <span>Recensioni ({{ reviews.length }})</span>
+          </h3>
+
+          <div class="bg-card border border-border rounded-lg p-5 shadow-sm space-y-3">
+            <div class="flex items-center gap-2">
+              <label class="text-sm font-semibold">Il tuo voto:</label>
+              <select [(ngModel)]="newRating" class="bg-background border border-input rounded p-1 text-sm">
+                <option [value]="5">⭐⭐⭐⭐⭐ (5)</option>
+                <option [value]="4">⭐⭐⭐⭐ (4)</option>
+                <option [value]="3">⭐⭐⭐ (3)</option>
+                <option [value]="2">⭐⭐ (2)</option>
+                <option [value]="1">⭐ (1)</option>
+              </select>
+            </div>
+            <textarea [(ngModel)]="newComment" placeholder="Condividi la tua opinione su questo evento..." class="w-full bg-background border border-input rounded-md p-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[80px]"></textarea>
+            <div class="flex justify-end">
+              <button (click)="addReview()" class="bg-primary text-primary-foreground text-xs font-semibold rounded-md hover:bg-primary/90 px-4 py-2 shadow-sm">Invia Recensione</button>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            @for (rev of reviews; track rev.id) {
+              <div class="bg-card border border-border rounded-lg p-4 shadow-sm space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="font-bold text-foreground">{{ rev.user }}</span>
+                  <span class="text-muted-foreground">{{ rev.date | date:'dd MMM yyyy':'':'it-IT' }}</span>
+                </div>
+                <div class="text-xs text-yellow-500">
+                  {{ '⭐'.repeat(rev.rating) }}
+                </div>
+                <p class="text-sm text-muted-foreground">{{ rev.text }}</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-card text-card-foreground border border-border rounded-lg p-6 shadow-sm space-y-6 sticky top-24">
+          <div class="space-y-1">
+            <p class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Prezzo del biglietto</p>
+            <p class="text-3xl font-extrabold text-foreground">{{ event.price === 0 ? 'Gratis' : '€' + event.price }}</p>
+          </div>
+
+          <div class="space-y-2 border-t border-border pt-4">
+            <label class="text-sm font-semibold">Quantità biglietti</label>
+            <div class="flex items-center gap-3">
+              <button (click)="ticketCount = ticketCount > 1 ? ticketCount - 1 : 1" class="border border-input bg-background hover:bg-accent h-8 w-8 rounded flex items-center justify-center font-bold text-lg">-</button>
+              <span class="font-bold text-base w-6 text-center">{{ ticketCount }}</span>
+              <button (click)="ticketCount = ticketCount + 1" class="border border-input bg-background hover:bg-accent h-8 w-8 rounded flex items-center justify-center font-bold text-lg">+</button>
+            </div>
+          </div>
+
+          <div class="border-t border-border pt-4 flex justify-between items-center text-sm font-bold">
+            <span>Totale complessivo:</span>
+            <span class="text-xl text-primary">€{{ event.price * ticketCount }}</span>
+          </div>
+
+          <button (click)="buyTickets()" class="w-full bg-primary text-primary-foreground h-10 rounded-md font-medium hover:bg-primary/90 transition-colors shadow-sm">
+            Prenota Ora
+          </button>
+
+          @if (purchaseSuccess) {
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded p-3 text-center font-semibold">
+              🎉 Ordine completato! Controlla i tuoi biglietti.
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <app-footer></app-footer>
+</div>
