@@ -15,16 +15,19 @@ export interface UserState {
 export class AuthService {
   private http = inject(HttpClient);
   
-  // URL standard del tuo Keycloak locale
-  private keycloakTokenUrl = 'http://localhost:8080/realms/eventhub-realm/protocol/openid-connect/token';
+  // URL pubblico del tuo Keycloak su GitHub Codespaces
+  private keycloakTokenUrl = 'https://reimagined-space-fishstick-976977wq669vf7r4r-8080.app.github.dev/realms/EventHub/protocol/openid-connect/token';
   private clientId = 'eventhub-frontend'; 
+
+  // URL del tuo backend Flask (Presumo la porta standard 5000 configurata su Codespaces)
+  private flaskApiUrl = 'https://reimagined-space-fishstick-976977wq669vf7r4r-5000.app.github.dev/api/auth/register';
 
   // Lo stato globale reattivo dell'applicazione
   private currentUserSubject = new BehaviorSubject<UserState | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor() {
-    // Al caricamento della pagina ricupera l'eventuale sessione salvata
+    // Al caricamento della pagina recupera l'eventuale sessione salvata
     const savedSession = localStorage.getItem('eventhub_session');
     if (savedSession) {
       this.currentUserSubject.next(JSON.parse(savedSession));
@@ -49,18 +52,22 @@ export class AuthService {
 
     return this.http.post<any>(this.keycloakTokenUrl, payload.toString(), { headers }).pipe(
       tap(res => {
-        // Estraiamo i ruoli associati a questo client decodificando il JWT
+        // Decodifichiamo il JWT per estrarre i ruoli in modo sicuro
         const decoded: any = jwtDecode(res.access_token);
-        const roles = decoded.resource_access?.[this.clientId]?.roles || [];
+        
+        // Estrae sia i ruoli globali del Realm che quelli del Client per evitare problemi di configurazione
+        const realmRoles = decoded.realm_access?.roles || [];
+        const clientRoles = decoded.resource_access?.[this.clientId]?.roles || [];
+        const allRoles = [...new Set([...realmRoles, ...clientRoles])]; // Unisce i ruoli senza duplicati
 
         const userState: UserState = {
           username: credentials.username,
-          roles: roles,
+          roles: allRoles,
           token: res.access_token
         };
 
-        // Salviamo i dati per i prossimi accessi
-        localStorage.setItem('eventhub_token', res.access_token);
+        // Salviamo i dati (allineando la chiave con il jwtInterceptor)
+        localStorage.setItem('access_token', res.access_token);
         localStorage.setItem('eventhub_session', JSON.stringify(userState));
         
         // Notifichiamo a tutta l'applicazione il cambio di stato
@@ -69,13 +76,13 @@ export class AuthService {
     );
   }
 
-  // Registrazione: manda i dati a Flask, che interagirà con Keycloak tramite le librerie Admin
+  // Registrazione: manda i dati a Flask, che interagirà con Keycloak tramite l'Admin Client
   register(userData: any): Observable<any> {
-    return this.http.post('http://localhost:5000/api/auth/register', userData);
+    return this.http.post(this.flaskApiUrl, userData);
   }
 
   logout(): void {
-    localStorage.removeItem('eventhub_token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem('eventhub_session');
     this.currentUserSubject.next(null);
   }

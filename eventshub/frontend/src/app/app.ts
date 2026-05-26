@@ -7,9 +7,9 @@ import { NavbarComponent } from './shared/components/navbar/navbar';
   standalone: true,
   imports: [RouterOutlet, NavbarComponent],
   template: `
-    <div class="min-h-screen bg-background text-foreground antialiased">
+    <div class="min-h-screen bg-background text-foreground antialiased flex flex-col">
       <app-navbar></app-navbar>
-      <main>
+      <main class="flex-grow">
         <router-outlet></router-outlet>
       </main>
     </div>

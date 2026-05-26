@@ -1,0 +1,23 @@
+# --- BACKEND (Flask / Python) ---
+backend/.env
+backend/__pycache__/
+backend/*.pyc
+backend/instance/
+backend/.pytest_cache/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# --- FRONTEND (Angular / Node) ---
+node_modules/
+dist/
+.angular/
+.tmp/
+.sass-cache/
+connect.lock
+coverage/
+
+# --- SISTEMA E IDE ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

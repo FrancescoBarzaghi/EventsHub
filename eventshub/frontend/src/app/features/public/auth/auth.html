@@ -3,8 +3,20 @@
     <div class="w-full max-w-[400px] border border-border bg-card text-card-foreground rounded-lg shadow-sm overflow-hidden">
       
       <div class="flex bg-muted p-1 m-4 rounded-lg">
-        <button (click)="activeTab = 'login'" [class.bg-background]="activeTab === 'login'" [class.shadow-sm]="activeTab === 'login'" class="flex-1 text-center font-medium text-sm py-1.5 rounded-md transition-all">Accedi</button>
-        <button (click)="activeTab = 'register'" [class.bg-background]="activeTab === 'register'" [class.shadow-sm]="activeTab === 'register'" class="flex-1 text-center font-medium text-sm py-1.5 rounded-md transition-all">Registrati</button>
+        <button type="button" 
+                (click)="switchTab('login')" 
+                [class.bg-background]="activeTab === 'login'" 
+                [class.shadow-sm]="activeTab === 'login'" 
+                class="flex-1 text-center font-medium text-sm py-1.5 rounded-md transition-all cursor-pointer">
+          Accedi
+        </button>
+        <button type="button" 
+                (click)="switchTab('register')" 
+                [class.bg-background]="activeTab === 'register'" 
+                [class.shadow-sm]="activeTab === 'register'" 
+                class="flex-1 text-center font-medium text-sm py-1.5 rounded-md transition-all cursor-pointer">
+          Registrati
+        </button>
       </div>
 
       <form (ngSubmit)="submitAuth()" class="p-6 pt-2 space-y-4">
@@ -17,12 +29,19 @@
           </p>
         </div>
 
+        @if (errorMessage) {
+          <div class="p-3 text-xs font-medium rounded-md border" 
+               [ngClass]="errorMessage.includes('successo') ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-destructive/10 text-destructive border-destructive/20'">
+            {{ errorMessage }}
+          </div>
+        }
+
         @if (activeTab === 'register') {
           <div class="space-y-1.5">
             <label class="text-xs font-semibold text-foreground">Nome Completo</label>
             <div class="relative">
               <lucide-icon name="user" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"></lucide-icon>
-              <input type="text" [(ngModel)]="name" name="name" required placeholder="Mario Rossi" class="w-full bg-background border border-input rounded-md h-9 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+              <input type="text" [(ngModel)]="name" name="name" placeholder="Mario Rossi" class="w-full bg-background border border-input rounded-md h-9 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
             </div>
           </div>
 
@@ -51,8 +70,8 @@
           </div>
         </div>
 
-        <button type="submit" class="w-full bg-primary text-primary-foreground font-medium text-sm rounded-md hover:bg-primary/90 h-9 transition-colors shadow-sm mt-2">
-          {{ activeTab === 'login' ? 'Connetti account' : 'Registra nuovo profilo' }}
+        <button type="submit" [disabled]="isLoading" class="w-full bg-primary text-primary-foreground font-medium text-sm rounded-md hover:bg-primary/90 h-9 transition-colors shadow-sm mt-2 disabled:opacity-50 flex items-center justify-center">
+          {{ isLoading ? 'Elaborazione...' : (activeTab === 'login' ? 'Connetti account' : 'Registra nuovo profilo') }}
         </button>
       </form>
 
@@ -60,4 +79,3 @@
   </div>
   <app-footer></app-footer>
 </div>
-
