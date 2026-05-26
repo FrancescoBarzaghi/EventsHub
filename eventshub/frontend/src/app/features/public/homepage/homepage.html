@@ -1,1 +1,79 @@
-<p>homepage works!</p>
+<div class="min-h-screen bg-background flex flex-col justify-between">
+  <div>
+    <section class="relative overflow-hidden bg-gradient-to-b from-primary/5 via-accent/5 to-background py-24 px-4 border-b border-border/40">
+      <div class="max-w-4xl mx-auto text-center space-y-6">
+        <h1 class="text-5xl md:text-6xl font-extrabold font-serif-title tracking-tight text-foreground">
+          Scopri Eventi Indimenticabili
+        </h1>
+        <p class="text-xl text-muted-foreground max-w-2xl mx-auto font-normal leading-relaxed">
+          Trova, pianifica e prenota i migliori eventi culturali, tecnologici e sportivi d'Italia. Tutto in un'unica piattaforma.
+        </p>
+        <div class="pt-4 flex justify-center gap-4">
+          <button routerLink="/search" class="inline-flex items-center justify-center bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 transition-colors h-11 px-8 shadow-sm">
+            <lucide-icon name="search" class="h-4 w-4 mr-2"></lucide-icon>
+            Esplora Eventi
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-2">
+        <div>
+          <h2 class="text-3xl font-bold font-serif-title tracking-tight mb-1">Eventi in Evidenza</h2>
+          <p class="text-muted-foreground text-sm">Le esperienze più esclusive selezionate per te.</p>
+        </div>
+        <button routerLink="/search" class="inline-flex items-center text-sm font-semibold text-primary hover:opacity-80 group">
+          Vedi tutti
+          <lucide-icon name="arrow-right" class="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (evt of featuredEvents; track evt.id) {
+          <app-event-card [event]="evt"></app-event-card>
+        }
+      </div>
+    </section>
+
+    <section class="bg-muted/40 border-t border-b border-border py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-2xl font-bold font-serif-title tracking-tight mb-8">Più Popolari del Momento</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (item of trendingEvents; track item.id) {
+            <div [routerLink]="['/event', item.id]" class="flex gap-4 p-4 rounded-lg border border-border bg-card text-card-foreground shadow-sm hover:shadow-md transition-all cursor-pointer items-center group">
+              <div class="h-20 w-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h4 class="font-bold text-sm tracking-tight text-foreground line-clamp-1 group-hover:text-primary transition-colors">{{ item.title }}</h4>
+                <p class="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <lucide-icon name="map-pin" class="h-3 w-3"></lucide-icon>
+                  {{ item.location }}
+                </p>
+                <div class="flex items-center justify-between mt-2">
+                  <span class="text-xs text-muted-foreground font-medium">{{ item.date | date:'dd MMM yyyy':'':'it-IT' }}</span>
+                  <span class="text-xs font-bold text-primary">{{ item.price === 0 ? 'Gratis' : '€' + item.price }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <h2 class="text-3xl font-bold font-serif-title tracking-tight mb-10 text-center">Esplora per Categoria</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        @for (category of categories; track category) {
+          <div [routerLink]="['/search']" [queryParams]="{category: category}" class="flex flex-col items-center justify-center p-6 bg-card text-card-foreground rounded-lg border border-border text-center shadow-sm hover:border-primary/40 hover:shadow-md transition-all cursor-pointer hover:-translate-y-0.5">
+            <span class="font-semibold text-sm tracking-tight text-foreground">{{ category }}</span>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+
+  <app-footer></app-footer>
+</div>

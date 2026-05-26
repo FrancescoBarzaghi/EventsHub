@@ -1,15 +1,18 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { Navbar } from './shared/components/navbar/navbar';
-import { Footer } from './shared/components/footer/footer';
+import { NavbarComponent } from './shared/components/navbar/navbar';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, Navbar, Footer],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+  imports: [RouterOutlet, NavbarComponent],
+  template: `
+    <div class="min-h-screen bg-background text-foreground antialiased">
+      <app-navbar></app-navbar>
+      <main>
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  `
 })
-export class App {
-  title = 'frontend';
-}
+export class AppComponent {}
