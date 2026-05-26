@@ -1,8 +1,13 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  template: `<footer class="bg-gray-800 text-gray-400 p-4 text-center text-sm mt-8">© 2026 EventHub - All rights reserved</footer>`
+  imports: [CommonModule, RouterModule],
+  templateUrl: './footer.html'
 })
-export class Footer {}
+export class FooterComponent {
+  currentYear = new Date().getFullYear();
+}

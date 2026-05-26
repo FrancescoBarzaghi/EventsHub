@@ -1,1 +1,70 @@
-<p>search works!</p>
+<div class="min-h-screen bg-background flex flex-col justify-between">
+  <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col md:flex-row gap-8">
+      
+      <div class="w-full md:w-64 flex-shrink-0 rounded-lg border border-border bg-card p-6 shadow-sm h-fit">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-border">
+          <div class="flex items-center gap-2 font-bold text-base">
+            <lucide-icon name="filter" class="h-4 w-4"></lucide-icon>
+            <span>Filtri di Ricerca</span>
+          </div>
+          <button (click)="resetFilters()" class="text-xs font-medium text-muted-foreground hover:text-primary transition-colors">Azzera</button>
+        </div>
+
+        <div class="space-y-5">
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Categoria</label>
+            <select [(ngModel)]="selectedCategory" class="w-full bg-background border border-input rounded-md h-9 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
+              @for (c of categories; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Prezzo</label>
+            <select [(ngModel)]="selectedPrice" class="w-full bg-background border border-input rounded-md h-9 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
+              <option value="Tutti">Tutti i prezzi</option>
+              <option value="Gratis">Solo Gratuiti</option>
+              <option value="Pagamento">A pagamento</option>
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Luogo</label>
+            <select [(ngModel)]="selectedLocation" class="w-full bg-background border border-input rounded-md h-9 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
+              @for (l of locations; track l) {
+                <option [value]="l">{{ l }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1 space-y-6">
+        <div class="relative">
+          <lucide-icon name="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"></lucide-icon>
+          <input type="text" [(ngModel)]="searchQuery" placeholder="Cerca eventi per parole chiave..." class="w-full bg-background border border-input rounded-md h-11 pl-10 pr-4 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+        </div>
+
+        <div class="text-sm font-medium text-muted-foreground">
+          Trovati {{ filteredEvents.length }} risultati
+        </div>
+
+        @if (filteredEvents.length > 0) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            @for (item of filteredEvents; track item.id) {
+              <app-event-card [event]="item"></app-event-card>
+            }
+          </div>
+        } @else {
+          <div class="flex flex-col items-center justify-center border border-dashed border-border rounded-lg p-16 bg-card text-center">
+            <p class="font-medium text-muted-foreground">Nessun evento corrisponde ai criteri inseriti.</p>
+          </div>
+        }
+      </div>
+
+    </div>
+  </div>
+  <app-footer></app-footer>
+</div>

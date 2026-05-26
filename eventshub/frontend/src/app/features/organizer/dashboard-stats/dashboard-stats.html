@@ -1,1 +1,103 @@
-<p>dashboard-stats works!</p>
+HTML
+<div class="min-h-screen bg-background flex flex-col justify-between">
+  <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold font-serif-title tracking-tight mb-1">Dashboard Organizzatore</h1>
+        <p class="text-muted-foreground text-sm">Monitora in tempo reale l'andamento dei tuoi biglietti e i ricavi accumulati.</p>
+      </div>
+      <button routerLink="/organizer/event-crud" class="inline-flex items-center justify-center bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 h-9 px-4 transition-colors shadow-sm self-start sm:self-center">
+        <lucide-icon name="plus-circle" class="h-4 w-4 mr-2"></lucide-icon>
+        Nuovo Evento
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <div class="border border-border bg-card text-card-foreground rounded-lg p-6 shadow-sm space-y-1">
+        <div class="flex items-center justify-between text-muted-foreground">
+          <span class="text-xs font-bold uppercase tracking-wider">Ricavi Totali</span>
+          <lucide-icon name="dollar-sign" class="h-4 w-4"></lucide-icon>
+        </div>
+        <p class="text-2xl font-bold tracking-tight">€{{ stats.totalRevenue }}</p>
+        <p class="text-[10px] text-emerald-600 font-medium">+18.2% rispetto al mese scorso</p>
+      </div>
+
+      <div class="border border-border bg-card text-card-foreground rounded-lg p-6 shadow-sm space-y-1">
+        <div class="flex items-center justify-between text-muted-foreground">
+          <span class="text-xs font-bold uppercase tracking-wider">Biglietti Venduti</span>
+          <lucide-icon name="ticket" class="h-4 w-4"></lucide-icon>
+        </div>
+        <p class="text-2xl font-bold tracking-tight">{{ stats.ticketsSold }}</p>
+        <p class="text-[10px] text-emerald-600 font-medium">+4.1% rispetto alla scorsa settimana</p>
+      </div>
+
+      <div class="border border-border bg-card text-card-foreground rounded-lg p-6 shadow-sm space-y-1">
+        <div class="flex items-center justify-between text-muted-foreground">
+          <span class="text-xs font-bold uppercase tracking-wider">Eventi Pubblicati</span>
+          <lucide-icon name="calendar" class="h-4 w-4"></lucide-icon>
+        </div>
+        <p class="text-2xl font-bold tracking-tight">{{ stats.activeEvents }}</p>
+        <p class="text-[10px] text-muted-foreground">Nessun evento in attesa di moderazione</p>
+      </div>
+
+      <div class="border border-border bg-card text-card-foreground rounded-lg p-6 shadow-sm space-y-1">
+        <div class="flex items-center justify-between text-muted-foreground">
+          <span class="text-xs font-bold uppercase tracking-wider">Tasso Conversione</span>
+          <lucide-icon name="trending-up" class="h-4 w-4"></lucide-icon>
+        </div>
+        <p class="text-2xl font-bold tracking-tight">{{ stats.conversionRate }}%</p>
+        <p class="text-[10px] text-emerald-600 font-medium">+2.3% di visite in acquisto diretto</p>
+      </div>
+
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <div class="lg:col-span-2 border border-border bg-card text-card-foreground rounded-lg p-6 shadow-sm space-y-4">
+        <div>
+          <h3 class="font-bold text-base tracking-tight">Panoramica Vendite</h3>
+          <p class="text-xs text-muted-foreground">Distribuzione delle vendite per mensilità nell'anno corrente.</p>
+        </div>
+        <div class="h-48 flex items-end justify-between pt-6 border-b border-border px-2">
+          <div class="w-8 bg-muted rounded-t h-12"></div>
+          <div class="w-8 bg-muted rounded-t h-20"></div>
+          <div class="w-8 bg-primary rounded-t h-32"></div>
+          <div class="w-8 bg-primary rounded-t h-40"></div>
+          <div class="w-8 bg-primary rounded-t h-24"></div>
+          <div class="w-8 bg-primary rounded-t h-44"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-muted-foreground font-semibold px-2">
+          <span>Gen</span><span>Feb</span><span>Mar</span><span>Apr</span><span>Mag</span><span>Giu</span>
+        </div>
+      </div>
+
+      <div class="border border-border bg-card text-card-foreground rounded-lg p-6 shadow-sm space-y-4">
+        <div>
+          <h3 class="font-bold text-base tracking-tight">Vendite Recenti</h3>
+          <p class="text-xs text-muted-foreground">Gli ultimi biglietti emessi dal sistema.</p>
+        </div>
+        
+        <div class="space-y-3.5">
+          @for (sale of recentSales; track sale.id) {
+            <div class="flex items-center justify-between text-xs pb-3 border-b border-border/60 last:border-0 last:pb-0">
+              <div class="space-y-0.5">
+                <p class="font-bold text-foreground">{{ sale.user }}</p>
+                <p class="text-muted-foreground font-medium">{{ sale.event }} (x{{ sale.qty }})</p>
+              </div>
+              <div class="text-right space-y-0.5">
+                <p class="font-bold text-primary">+€{{ sale.price }}</p>
+                <p class="text-[10px] text-muted-foreground font-medium">{{ sale.date }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <app-footer></app-footer>
+</div>
+

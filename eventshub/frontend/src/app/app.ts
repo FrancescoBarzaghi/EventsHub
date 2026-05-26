@@ -16,4 +16,3 @@ import { NavbarComponent } from './shared/components/navbar/navbar';
   `
 })
 export class AppComponent {}
-
