@@ -1,1 +1,87 @@
-<p>event-crud works!</p>
+<div class="min-h-screen bg-background flex flex-col justify-between">
+  <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    
+    <div>
+      <h1 class="text-3xl font-bold font-serif-title tracking-tight mb-1">Gestione Eventi</h1>
+      <p class="text-muted-foreground text-sm">Crea nuove schede evento e tieni traccia dei biglietti staccati per ciascuna data.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <div class="border border-border bg-card text-card-foreground rounded-lg p-6 shadow-sm h-fit space-y-4">
+        <h3 class="font-bold text-lg tracking-tight pb-2 border-b border-border">Crea Nuovo Evento</h3>
+        
+        <form (ngSubmit)="addEvent()" class="space-y-4">
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-foreground">Titolo Evento</label>
+            <input type="text" [(ngModel)]="title" name="title" required placeholder="Es. Concerto Rock Live" class="w-full bg-background border border-input rounded-md h-9 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-foreground">Categoria</label>
+            <select [(ngModel)]="category" name="category" class="w-full bg-background border border-input rounded-md h-9 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
+              <option value="Musica">Musica</option>
+              <option value="Tecnologia">Tecnologia</option>
+              <option value="Gastronomia">Gastronomia</option>
+              <option value="Arte">Arte</option>
+              <option value="Sport">Sport</option>
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-foreground">Data di Svolgimento</label>
+            <input type="date" [(ngModel)]="date" name="date" required class="w-full bg-background border border-input rounded-md h-9 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-foreground">Prezzo Biglietto (€)</label>
+            <input type="number" [(ngModel)]="price" name="price" min="0" class="w-full bg-background border border-input rounded-md h-9 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+          </div>
+
+          <button type="submit" class="w-full bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 h-9 transition-colors shadow-sm pt-0.5">Pubblica Evento</button>
+        </form>
+      </div>
+
+      <div class="lg:col-span-2 border border-border bg-card text-card-foreground rounded-lg shadow-sm overflow-hidden flex flex-col justify-between">
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-border bg-muted/50 text-muted-foreground text-xs uppercase font-bold tracking-wider">
+                <th class="p-4">Evento</th>
+                <th class="p-4">Categoria</th>
+                <th class="p-4">Data</th>
+                <th class="p-4 text-center">Venduti</th>
+                <th class="p-4 text-right">Prezzo</th>
+                <th class="p-4 text-center">Azioni</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border text-foreground">
+              @for (e of eventsList; track e.id) {
+                <tr class="hover:bg-muted/30 transition-colors">
+                  <td class="p-4 font-bold text-sm tracking-tight max-w-[200px] truncate">{{ e.title }}</td>
+                  <td class="p-4 text-muted-foreground text-xs font-medium">{{ e.category }}</td>
+                  <td class="p-4 text-xs text-muted-foreground">{{ e.date | date:'dd MMM yyyy':'':'it-IT' }}</td>
+                  <td class="p-4 text-center font-semibold text-xs">{{ e.sold }}</td>
+                  <td class="p-4 text-right font-bold text-xs">€{{ e.price }}</td>
+                  <td class="p-4 text-center">
+                    <button (click)="deleteEvent(e.id)" class="text-destructive hover:bg-destructive/10 p-1.5 rounded transition-colors">
+                      <lucide-icon name="trash-2" class="h-4 w-4"></lucide-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        
+        @if (eventsList.length === 0) {
+          <div class="p-12 text-center text-muted-foreground font-medium border-t border-border">Nessun evento inserito a registro.</div>
+        }
+      </div>
+
+    </div>
+
+  </div>
+  <app-footer></app-footer>
+</div>
+
