@@ -9,7 +9,14 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_HOSTNAME_STRICT: "false"
       KC_PROXY_HEADERS: "xforwarded"
+      KC_DB: dev-file
     ports:
       - "8080:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
     command:
       - start-dev
+
+volumes:
+  keycloak_data:
+    name: keycloak_data
