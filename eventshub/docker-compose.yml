@@ -14,8 +14,10 @@ services:
       - "8080:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
+      - ./eventshub/backend/realm-export.json:/opt/keycloak/data/import/realm.json
     command:
       - start-dev
+      - --import-realm
 
 volumes:
   keycloak_data:
