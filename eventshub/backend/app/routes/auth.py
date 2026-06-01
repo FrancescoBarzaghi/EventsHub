@@ -3,12 +3,7 @@ import requests
 
 auth_bp = Blueprint('auth', __name__)
 
-# URL INTERNO: Usato da Flask per parlare direttamente con Keycloak dentro Docker
-KEYCLOAK_INTERNAL_URL = "http://keycloak:8080"
-
-# URL PUBBLICO: Quello di GitHub Codespaces (tienilo qui per riferimento se ti servirà)
-KEYCLOAK_PUBLIC_URL = "https://reimagined-space-fishstick-976977wq669vf7r4r-8080.app.github.dev"
-
+KEYCLOAK_INTERNAL_URL = "http://localhost:8080"
 REALM_NAME = "EventHub"
 CLIENT_ID = "eventhub-frontend"
 
@@ -16,7 +11,6 @@ KEYCLOAK_ADMIN_USER = "admin"
 KEYCLOAK_ADMIN_PASSWORD = "admin"
 
 def get_admin_token():
-    """Recupera il token di amministrazione usando la rete interna di Docker"""
     url = f"{KEYCLOAK_INTERNAL_URL}/realms/master/protocol/openid-connect/token"
     payload = {
         'grant_type': 'password',
@@ -25,34 +19,39 @@ def get_admin_token():
         'password': KEYCLOAK_ADMIN_PASSWORD
     }
     try:
-        # verify=False evita problemi con i certificati SSL interni di Docker
         response = requests.post(url, data=payload, verify=False, timeout=10)
         if response.status_code == 200:
             return response.json().get('access_token')
-        print(f"Errore get_admin_token: Status {response.status_code} - {response.text}")
         return None
-    except Exception as e:
-        print(f"Eccezione in get_admin_token: {str(e)}")
+    except Exception:
         return None
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST', 'OPTIONS'])
 def register():
-    data = request.get_json()
-    
+    if request.method == 'OPTIONS':
+        return jsonify({"message": "OK"}), 200
+
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
     name = data.get('name')
-    role = data.get('role', 'user') # Se non passato, default a 'user'
+    
+    # Determiniamo il nome del gruppo su Keycloak (User o Organizer)
+    requested_role = str(data.get('role', 'user')).strip().lower()
+    group_name = "Organizer" if requested_role == "organizer" else "User"
 
     if not email or not password or not username:
-        return jsonify({"message": "Dati mancanti obbligatori"}), 400
+        return jsonify({"message": "Dati obbligatori mancanti (email, username o password)"}), 400
 
     name_parts = name.split(' ', 1) if name else ["", ""]
     first_name = name_parts[0]
     last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-    # 1. Ottieni il token admin tramite rotta interna
     admin_token = get_admin_token()
     if not admin_token:
         return jsonify({"message": "Impossibile autenticarsi su Keycloak come Admin internamente"}), 500
@@ -62,23 +61,20 @@ def register():
         "Content-Type": "application/json"
     }
 
-    # 2. Payload utente
+    # 1. Payload di creazione Utente
     user_payload = {
         "username": username,
         "email": email,
         "enabled": True,
         "firstName": first_name,
         "lastName": last_name,
-        "credentials": [
-            {
-                "type": "password",
-                "value": password,
-                "temporary": False
-            }
-        ]
+        "credentials": [{
+            "type": "password",
+            "value": password,
+            "temporary": False
+        }]
     }
 
-    # 3. Creazione utente tramite rotta interna
     create_user_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users"
     try:
         response = requests.post(create_user_url, json=user_payload, headers=headers, verify=False, timeout=10)
@@ -86,27 +82,40 @@ def register():
         return jsonify({"message": f"Errore di connessione interna a Keycloak: {str(e)}"}), 500
 
     if response.status_code == 201:
-        # 4. Cerca l'ID dell'utente appena creato
-        search_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users?username={username}"
-        search_res = requests.get(search_url, headers=headers, verify=False)
-        
-        if search_res.status_code == 200 and len(search_res.json()) > 0:
-            user_id = search_res.json()[0]['id']
-            
-            # 5. Recupera il ruolo dal Realm
-            role_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/roles/{role}"
-            role_res = requests.get(role_url, headers=headers, verify=False)
-            
-            if role_res.status_code == 200:
-                role_data = role_res.json()
-                
-                # 6. Assegna il ruolo all'utente
-                assign_role_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users/{user_id}/role-mappings/realm"
-                requests.post(assign_role_url, json=[role_data], headers=headers, verify=False)
+        # 2. Recuperiamo l'ID dell'utente appena creato
+        search_user_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users?username={username}"
+        try:
+            user_res = requests.get(search_user_url, headers=headers, verify=False, timeout=10)
+            if user_res.status_code == 200 and len(user_res.json()) > 0:
+                user_id = user_res.json()[0]['id']
 
-        return jsonify({"message": "Utente registrato con successo su Keycloak!"}), 201
+                # 3. Recuperiamo l'ID del Gruppo (User o Organizer) su Keycloak
+                search_group_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/groups?search={group_name}"
+                group_res = requests.get(search_group_url, headers=headers, verify=False, timeout=10)
+                
+                if group_res.status_code == 200 and len(group_res.json()) > 0:
+                    # Troviamo l'esatta corrispondenza del gruppo
+                    group = next((g for g in group_res.json() if g['name'] == group_name), None)
+                    if group:
+                        group_id = group['id']
+                        
+                        # 4. Aggiungiamo l'utente al gruppo
+                        join_group_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users/{user_id}/groups/{group_id}"
+                        requests.put(join_group_url, headers=headers, verify=False, timeout=10)
+                        print(f"[SUCCESS] Utente aggiunto al gruppo {group_name}")
+                    else:
+                        print(f"[WARNING] Gruppo {group_name} non trovato nei risultati filtrati.")
+                else:
+                    print(f"[WARNING] Impossibile trovare l'ID del gruppo {group_name} su Keycloak.")
+        except Exception as e:
+            print(f"[ERROR] Errore durante l'assegnazione del gruppo: {str(e)}")
+
+        return jsonify({"message": "Utente registrato con successo e inserito nel gruppo!"}), 201
     
     elif response.status_code == 409:
         return jsonify({"message": "Un utente con questa email o username esiste già."}), 409
     else:
-        return jsonify({"message": "Errore durante la creazione dell'utente su Keycloak", "details": response.text}), response.status_code
+        return jsonify({
+            "message": "Errore durante la creazione dell'utente su Keycloak", 
+            "details": response.text
+        }), response.status_code

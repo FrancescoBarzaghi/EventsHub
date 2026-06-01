@@ -6,23 +6,22 @@ import os
 def create_app():
     app = Flask(__name__)
     
-    # Configurazione CORS super estesa per Codespaces
+    # Configurazione CORS super estesa e sicura per Codespaces
+    # Gestito nativamente per le rotte dell'applicazione
     CORS(app, resources={r"/api/*": {
         "origins": "*",
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
-        "supports_credentials": True
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"]
     }})
     
-    # Intercettiamo le richieste OPTIONS a livello globale prima che arrivino ai blueprint
-    @app.before_request
-    def handle_options_preflight():
-        if request.method == "OPTIONS":
-            response = make_response()
-            response.headers.add("Access-Control-Allow-Origin", "*")
-            response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Accept")
-            response.headers.add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-            return response
+    # Intercettiamo i Preflight e iniettiamo gli header su OGNI risposta
+    # Questo evita il blocco sui Blueprint e non crea conflitti con Flask-CORS
+    @app.after_request
+    def add_cors_headers(response):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        return response
 
     # Configurazione di base per Flask
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'eventhub_super_secret_key_123')

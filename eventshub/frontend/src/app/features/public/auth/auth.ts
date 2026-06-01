@@ -21,19 +21,16 @@ import { AuthService } from '../../../core/services/auth';
 export class AuthComponent {
   activeTab: 'login' | 'register' = 'login';
 
-  // Campi Moduli (legati con [(ngModel)] al tuo HTML)
   email = '';
   password = '';
   name = '';
   role: 'user' | 'organizer' = 'user';
 
-  // Gestione stati grafici di feedback
   errorMessage = '';
   isLoading = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
-  // Forza il cambio di tab e pulisce gli errori precedenti
   switchTab(tab: 'login' | 'register'): void {
     this.activeTab = tab;
     this.errorMessage = '';
@@ -42,18 +39,19 @@ export class AuthComponent {
   submitAuth(): void {
     this.errorMessage = '';
     
-    // Validazione base prima dell'invio
     if (!this.email || !this.password) {
       this.errorMessage = 'Per favore, compila tutti i campi obbligatori.';
+      return;
+    }
+
+    if (this.activeTab === 'register' && !this.name) {
+      this.errorMessage = 'Per favore, inserisci il tuo nome completo.';
       return;
     }
 
     this.isLoading = true;
 
     if (this.activeTab === 'login') {
-      // -------------------------------
-      // FLUSSO DI LOGIN (Via API Keycloak)
-      // -------------------------------
       this.authService.login({ username: this.email, password: this.password }).subscribe({
         next: (res) => {
           this.isLoading = false;
@@ -67,11 +65,8 @@ export class AuthComponent {
       });
 
     } else {
-      // -------------------------------
-      // FLUSSO DI REGISTRAZIONE (Via Flask Backend)
-      // -------------------------------
       const registrationPayload = {
-        username: this.email.split('@')[0], 
+        username: this.email, 
         email: this.email,
         password: this.password,
         name: this.name,
@@ -81,13 +76,15 @@ export class AuthComponent {
       this.authService.register(registrationPayload).subscribe({
         next: (res) => {
           this.isLoading = false;
-          // Switch automatico sul tab di login
           this.activeTab = 'login';
           this.errorMessage = "Registrazione avvenuta con successo! Ora puoi effettuare l'accesso.";
+          this.email = '';
+          this.password = '';
+          this.name = '';
         },
         error: (err) => {
           this.isLoading = false;
-          this.errorMessage = err.error?.message || 'Errore durante la registrazione. Riprova.';
+          this.errorMessage = err.error?.message || 'Errore durante la registrazione. Riprova o controlla se l\'utente esiste già.';
           console.error('Errore Registrazione Flask:', err);
         }
       });
