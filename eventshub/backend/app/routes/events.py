@@ -4,12 +4,14 @@ from app.decorators import token_required
 events_bp = Blueprint('events', __name__)
 
 # Rotta PUBBLICA: chiunque può vedere gli eventi
-@events_bp.route('/api/events', methods=['GET'])
+# Accessibile a: GET http://localhost:5000/api/events
+@events_bp.route('', methods=['GET'])
 def get_events():
-    return jsonify({"message": "Lista degli eventi pubblici"})
+    return jsonify({"message": "Lista degli eventi pubblici"}), 200
 
-# Rotta PROTETTA (Solo Organizer o Admin possono creare eventi)
-@events_bp.route('/api/events', methods=['POST'])
+# Rotta PROTETTA: Solo Organizer o Admin possono creare eventi
+# Accessibile a: POST http://localhost:5000/api/events
+@events_bp.route('', methods=['POST'])
 @token_required(required_role="organizer")
 def create_event():
     # Se il codice arriva qui, Keycloak ha già garantito che l'utente è un organizer!

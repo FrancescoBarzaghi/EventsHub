@@ -1,0 +1,143 @@
+.
+├── README.md
+├── eventshub
+│   ├── backend
+│   │   ├── app
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── __init__.cpython-312.pyc
+│   │   │   │   └── decorators.cpython-312.pyc
+│   │   │   ├── config.py
+│   │   │   ├── decorators.py
+│   │   │   ├── models.py
+│   │   │   ├── routes
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── __pycache__
+│   │   │   │   │   ├── __init__.cpython-312.pyc
+│   │   │   │   │   ├── auth.cpython-312.pyc
+│   │   │   │   │   ├── events.cpython-312.pyc
+│   │   │   │   │   └── reviews.cpython-312.pyc
+│   │   │   │   ├── auth.py
+│   │   │   │   ├── events.py
+│   │   │   │   ├── reviews.py
+│   │   │   │   └── tickets.py
+│   │   │   └── schemas.py
+│   │   ├── realm-export.json
+│   │   ├── requirements.txt
+│   │   ├── run.py
+│   │   └── tests
+│   │       └── __init__.py
+│   ├── docker-compose.yml
+│   ├── eventshub
+│   │   └── backend
+│   │       └── realm-export.json
+│   ├── frontend
+│   │   ├── README.md
+│   │   ├── angular.json
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── public
+│   │   │   └── favicon.ico
+│   │   ├── src
+│   │   │   ├── app
+│   │   │   │   ├── app.config.ts
+│   │   │   │   ├── app.css
+│   │   │   │   ├── app.html
+│   │   │   │   ├── app.routes.ts
+│   │   │   │   ├── app.spec.ts
+│   │   │   │   ├── app.ts
+│   │   │   │   ├── core
+│   │   │   │   │   ├── guards
+│   │   │   │   │   │   ├── auth-guard.spec.ts
+│   │   │   │   │   │   └── auth-guard.ts
+│   │   │   │   │   ├── interceptors
+│   │   │   │   │   │   ├── jwt-interceptor.spec.ts
+│   │   │   │   │   │   └── jwt-interceptor.ts
+│   │   │   │   │   └── services
+│   │   │   │   │       ├── auth.spec.ts
+│   │   │   │   │       ├── auth.ts
+│   │   │   │   │       ├── event.spec.ts
+│   │   │   │   │       └── event.ts
+│   │   │   │   ├── features
+│   │   │   │   │   ├── admin
+│   │   │   │   │   │   ├── moderation
+│   │   │   │   │   │   │   ├── moderation.css
+│   │   │   │   │   │   │   ├── moderation.html
+│   │   │   │   │   │   │   ├── moderation.spec.ts
+│   │   │   │   │   │   │   └── moderation.ts
+│   │   │   │   │   │   └── users
+│   │   │   │   │   │       ├── users.css
+│   │   │   │   │   │       ├── users.html
+│   │   │   │   │   │       ├── users.spec.ts
+│   │   │   │   │   │       └── users.ts
+│   │   │   │   │   ├── organizer
+│   │   │   │   │   │   ├── dashboard-stats
+│   │   │   │   │   │   │   ├── dashboard-stats.css
+│   │   │   │   │   │   │   ├── dashboard-stats.html
+│   │   │   │   │   │   │   ├── dashboard-stats.spec.ts
+│   │   │   │   │   │   │   └── dashboard-stats.ts
+│   │   │   │   │   │   └── event-crud
+│   │   │   │   │   │       ├── event-crud.css
+│   │   │   │   │   │       ├── event-crud.html
+│   │   │   │   │   │       ├── event-crud.spec.ts
+│   │   │   │   │   │       └── event-crud.ts
+│   │   │   │   │   ├── public
+│   │   │   │   │   │   ├── auth
+│   │   │   │   │   │   │   ├── auth.css
+│   │   │   │   │   │   │   ├── auth.html
+│   │   │   │   │   │   │   ├── auth.spec.ts
+│   │   │   │   │   │   │   └── auth.ts
+│   │   │   │   │   │   ├── event-detail
+│   │   │   │   │   │   │   ├── event-detail.css
+│   │   │   │   │   │   │   ├── event-detail.html
+│   │   │   │   │   │   │   ├── event-detail.spec.ts
+│   │   │   │   │   │   │   └── event-detail.ts
+│   │   │   │   │   │   ├── homepage
+│   │   │   │   │   │   │   ├── homepage.css
+│   │   │   │   │   │   │   ├── homepage.html
+│   │   │   │   │   │   │   ├── homepage.spec.ts
+│   │   │   │   │   │   │   └── homepage.ts
+│   │   │   │   │   │   └── search
+│   │   │   │   │   │       ├── search.css
+│   │   │   │   │   │       ├── search.html
+│   │   │   │   │   │       ├── search.spec.ts
+│   │   │   │   │   │       └── search.ts
+│   │   │   │   │   └── user
+│   │   │   │   │       ├── dashboard
+│   │   │   │   │       │   ├── dashboard.css
+│   │   │   │   │       │   ├── dashboard.html
+│   │   │   │   │       │   ├── dashboard.spec.ts
+│   │   │   │   │       │   └── dashboard.ts
+│   │   │   │   │       └── profile
+│   │   │   │   │           ├── profile.css
+│   │   │   │   │           ├── profile.html
+│   │   │   │   │           ├── profile.spec.ts
+│   │   │   │   │           └── profile.ts
+│   │   │   │   └── shared
+│   │   │   │       └── components
+│   │   │   │           ├── event-card
+│   │   │   │           │   ├── event-card.css
+│   │   │   │           │   ├── event-card.html
+│   │   │   │           │   ├── event-card.spec.ts
+│   │   │   │           │   └── event-card.ts
+│   │   │   │           ├── footer
+│   │   │   │           │   ├── footer.css
+│   │   │   │           │   ├── footer.html
+│   │   │   │           │   ├── footer.spec.ts
+│   │   │   │           │   └── footer.ts
+│   │   │   │           └── navbar
+│   │   │   │               ├── navbar.css
+│   │   │   │               ├── navbar.html
+│   │   │   │               ├── navbar.spec.ts
+│   │   │   │               └── navbar.ts
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   └── styles.css
+│   │   ├── tailwind.config.js
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   └── tsconfig.spec.json
+│   └── package-lock.json
+└── struttura.txt
+
+39 directories, 102 files

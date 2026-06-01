@@ -14,7 +14,8 @@ services:
       - "8080:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
-      - ./eventshub/backend/realm-export.json:/opt/keycloak/data/import/realm.json
+      # CORRETTO: rimosso il doppione di 'eventshub' all'inizio del percorso
+      - ./backend/realm-export.json:/opt/keycloak/data/import/realm.json
     command:
       - start-dev
       - --import-realm

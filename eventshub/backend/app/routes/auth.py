@@ -3,60 +3,66 @@ import requests
 
 auth_bp = Blueprint('auth', __name__)
 
-# Configurazione Keycloak di amministrazione
-KEYCLOAK_URL = "https://reimagined-space-fishstick-976977wq669vf7r4r-8080.app.github.dev"
+# URL INTERNO: Usato da Flask per parlare direttamente con Keycloak dentro Docker
+KEYCLOAK_INTERNAL_URL = "http://keycloak:8080"
+
+# URL PUBBLICO: Quello di GitHub Codespaces (tienilo qui per riferimento se ti servirà)
+KEYCLOAK_PUBLIC_URL = "https://reimagined-space-fishstick-976977wq669vf7r4r-8080.app.github.dev"
+
 REALM_NAME = "EventHub"
 CLIENT_ID = "eventhub-frontend"
 
-# NOTA: Per creare utenti, Flask deve autenticarsi come amministratore di Keycloak.
-# Assicurati di usare le credenziali ADMIN principali del tuo Keycloak (Master/Admin)
 KEYCLOAK_ADMIN_USER = "admin" 
-KEYCLOAK_ADMIN_PASSWORD = "admin" # Sostituisci con la tua password admin se diversa
+KEYCLOAK_ADMIN_PASSWORD = "admin"
 
 def get_admin_token():
-    """Recupera il token di amministrazione per gestire gli utenti su Keycloak"""
-    url = f"{KEYCLOAK_URL}/realms/master/protocol/openid-connect/token"
+    """Recupera il token di amministrazione usando la rete interna di Docker"""
+    url = f"{KEYCLOAK_INTERNAL_URL}/realms/master/protocol/openid-connect/token"
     payload = {
         'grant_type': 'password',
         'client_id': 'admin-cli',
         'username': KEYCLOAK_ADMIN_USER,
         'password': KEYCLOAK_ADMIN_PASSWORD
     }
-    response = requests.post(url, data=payload, verify=False)
-    if response.status_code == 200:
-        return response.json().get('access_token')
-    return None
+    try:
+        # verify=False evita problemi con i certificati SSL interni di Docker
+        response = requests.post(url, data=payload, verify=False, timeout=10)
+        if response.status_code == 200:
+            return response.json().get('access_token')
+        print(f"Errore get_admin_token: Status {response.status_code} - {response.text}")
+        return None
+    except Exception as e:
+        print(f"Eccezione in get_admin_token: {str(e)}")
+        return None
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
     
-    # Estraiamo i dati inviati dal tuo form Angular
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
     name = data.get('name')
-    role = data.get('role') # 'user' o 'organizer'
+    role = data.get('role', 'user') # Se non passato, default a 'user'
 
     if not email or not password or not username:
         return jsonify({"message": "Dati mancanti obbligatori"}), 400
 
-    # Separaiamo il nome e il cognome in modo basico se presenti
     name_parts = name.split(' ', 1) if name else ["", ""]
     first_name = name_parts[0]
     last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-    # 1. Ottieni il token admin per fare operazioni su Keycloak
+    # 1. Ottieni il token admin tramite rotta interna
     admin_token = get_admin_token()
     if not admin_token:
-        return jsonify({"message": "Impossibile autenticarsi su Keycloak come Admin"}), 500
+        return jsonify({"message": "Impossibile autenticarsi su Keycloak come Admin internamente"}), 500
 
     headers = {
         "Authorization": f"Bearer {admin_token}",
         "Content-Type": "application/json"
     }
 
-    # 2. Prepariamo il payload per creare l'utente su Keycloak
+    # 2. Payload utente
     user_payload = {
         "username": username,
         "email": email,
@@ -67,35 +73,35 @@ def register():
             {
                 "type": "password",
                 "value": password,
-                "temporary": False # L'utente non dovrà cambiarla al primo accesso
+                "temporary": False
             }
         ]
     }
 
-    # 3. Chiamata API a Keycloak per creare l'anagrafica
-    create_user_url = f"{KEYCLOAK_URL}/admin/realms/{REALM_NAME}/users"
-    response = requests.post(create_user_url, json=user_payload, headers=headers, verify=False)
+    # 3. Creazione utente tramite rotta interna
+    create_user_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users"
+    try:
+        response = requests.post(create_user_url, json=user_payload, headers=headers, verify=False, timeout=10)
+    except Exception as e:
+        return jsonify({"message": f"Errore di connessione interna a Keycloak: {str(e)}"}), 500
 
     if response.status_code == 201:
-        # L'utente è stato creato! Ora dobbiamo assegnargli il ruolo (user o organizer)
-        
-        # Recuperiamo l'ID dell'utente appena creato (Keycloak lo restituisce nell'header Location)
-        # Oppure facciamo una rapida ricerca per username
-        search_url = f"{KEYCLOAK_URL}/admin/realms/{REALM_NAME}/users?username={username}"
+        # 4. Cerca l'ID dell'utente appena creato
+        search_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users?username={username}"
         search_res = requests.get(search_url, headers=headers, verify=False)
         
         if search_res.status_code == 200 and len(search_res.json()) > 0:
             user_id = search_res.json()[0]['id']
             
-            # Recuperiamo l'ID del ruolo dal Realm (es: 'user' o 'organizer')
-            role_url = f"{KEYCLOAK_URL}/admin/realms/{REALM_NAME}/roles/{role}"
+            # 5. Recupera il ruolo dal Realm
+            role_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/roles/{role}"
             role_res = requests.get(role_url, headers=headers, verify=False)
             
             if role_res.status_code == 200:
                 role_data = role_res.json()
                 
-                # Assegniamo il ruolo all'utente su Keycloak
-                assign_role_url = f"{KEYCLOAK_URL}/admin/realms/{REALM_NAME}/users/{user_id}/role-mappings/realm"
+                # 6. Assegna il ruolo all'utente
+                assign_role_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users/{user_id}/role-mappings/realm"
                 requests.post(assign_role_url, json=[role_data], headers=headers, verify=False)
 
         return jsonify({"message": "Utente registrato con successo su Keycloak!"}), 201
