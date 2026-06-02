@@ -1,17 +1,17 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 import requests
 
 auth_bp = Blueprint('auth', __name__)
 
-KEYCLOAK_INTERNAL_URL = "http://localhost:8080"
-REALM_NAME = "EventHub"
-CLIENT_ID = "eventhub-frontend"
-
+# Credenziali Admin di Keycloak
 KEYCLOAK_ADMIN_USER = "admin" 
 KEYCLOAK_ADMIN_PASSWORD = "admin"
 
 def get_admin_token():
-    url = f"{KEYCLOAK_INTERNAL_URL}/realms/master/protocol/openid-connect/token"
+    # Recupera l'URL interno corretto o usa 127.0.0.1 se non configurato nell'app
+    keycloak_url = current_app.config.get('KEYCLOAK_INTERNAL_URL', 'http://127.0.0.1:8080')
+    url = f"{keycloak_url}/realms/master/protocol/openid-connect/token"
+    
     payload = {
         'grant_type': 'password',
         'client_id': 'admin-cli',
@@ -23,7 +23,8 @@ def get_admin_token():
         if response.status_code == 200:
             return response.json().get('access_token')
         return None
-    except Exception:
+    except Exception as e:
+        print(f"[KEYCLOAK ERROR] Impossibile ottenere Admin Token: {str(e)}")
         return None
 
 @auth_bp.route('/register', methods=['POST', 'OPTIONS'])
@@ -61,6 +62,10 @@ def register():
         "Content-Type": "application/json"
     }
 
+    # Recuperiamo le costanti di configurazione globali con fallback corretto su localhost
+    keycloak_url = current_app.config.get('KEYCLOAK_INTERNAL_URL', 'http://127.0.0.1:8080')
+    realm_name = current_app.config.get('REALM_NAME', 'EventHub')
+
     # 1. Payload di creazione Utente
     user_payload = {
         "username": username,
@@ -75,7 +80,7 @@ def register():
         }]
     }
 
-    create_user_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users"
+    create_user_url = f"{keycloak_url}/admin/realms/{realm_name}/users"
     try:
         response = requests.post(create_user_url, json=user_payload, headers=headers, verify=False, timeout=10)
     except Exception as e:
@@ -83,14 +88,14 @@ def register():
 
     if response.status_code == 201:
         # 2. Recuperiamo l'ID dell'utente appena creato
-        search_user_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users?username={username}"
+        search_user_url = f"{keycloak_url}/admin/realms/{realm_name}/users?username={username}"
         try:
             user_res = requests.get(search_user_url, headers=headers, verify=False, timeout=10)
             if user_res.status_code == 200 and len(user_res.json()) > 0:
                 user_id = user_res.json()[0]['id']
 
                 # 3. Recuperiamo l'ID del Gruppo (User o Organizer) su Keycloak
-                search_group_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/groups?search={group_name}"
+                search_group_url = f"{keycloak_url}/admin/realms/{realm_name}/groups?search={group_name}"
                 group_res = requests.get(search_group_url, headers=headers, verify=False, timeout=10)
                 
                 if group_res.status_code == 200 and len(group_res.json()) > 0:
@@ -100,7 +105,7 @@ def register():
                         group_id = group['id']
                         
                         # 4. Aggiungiamo l'utente al gruppo
-                        join_group_url = f"{KEYCLOAK_INTERNAL_URL}/admin/realms/{REALM_NAME}/users/{user_id}/groups/{group_id}"
+                        join_group_url = f"{keycloak_url}/admin/realms/{realm_name}/users/{user_id}/groups/{group_id}"
                         requests.put(join_group_url, headers=headers, verify=False, timeout=10)
                         print(f"[SUCCESS] Utente aggiunto al gruppo {group_name}")
                     else:

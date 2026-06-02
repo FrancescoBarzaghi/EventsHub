@@ -15,12 +15,12 @@ export interface UserState {
 export class AuthService {
   private http = inject(HttpClient);
   
-  // URL pubblico di Keycloak aggiornato con il dominio attivo di Codespaces
-  private keycloakTokenUrl = 'https://super-duper-goldfish-jjr5jj94rqj7h559v-8080.app.github.dev/realms/EventHub/protocol/openid-connect/token';
+  // URL pubblico di Keycloak aggiornato con il dominio attivo di Codespaces (Porta 8080)
+  private keycloakTokenUrl = 'https://silver-space-garbanzo-wrv7rrx9vxxxhqx7-8080.app.github.dev/realms/EventHub/protocol/openid-connect/token';
   private clientId = 'eventhub-frontend'; 
 
-  // URL del backend Flask aggiornato con il dominio attivo di Codespaces
-  private flaskApiUrl = 'https://super-duper-goldfish-jjr5jj94rqj7h559v-5000.app.github.dev/api/auth/register';
+  // URL del backend Flask aggiornato con il dominio attivo di Codespaces (Porta 5000)
+  private flaskApiUrl = 'https://silver-space-garbanzo-wrv7rrx9vxxxhqx7-5000.app.github.dev/api/auth/register';
 
   // Stato globale reattivo dell'applicazione
   private currentUserSubject = new BehaviorSubject<UserState | null>(null);
