@@ -1,16 +1,23 @@
+import os
+import sys
 from datetime import datetime
-from flask import Flask
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from app.config import Config
 
-# 1. Inizializzazione globale delle estensioni del Database
-db = SQLAlchemy()
-migrate = Migrate()
+# Assicuriamoci di poter importare il package app indipendentemente dalla directory corrente
+ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if ROOT_PATH not in sys.path:
+    sys.path.insert(0, ROOT_PATH)
 
-_SAMPLE_EVENTS = [
+from app import create_app, db
+from app.models import Event, User
+
+SAMPLE_ORGANIZER = {
+    "id": "seed_organizer_default",
+    "username": "seed_organizer",
+    "email": "seed_organizer@eventshub.local",
+    "role": "organizer"
+}
+
+SAMPLE_EVENTS = [
     {
         "title": "Festival Jazz Italiano 2026",
         "description": "Concerto all'aperto con i più grandi artisti jazz nazionali e internazionali.",
@@ -79,41 +86,32 @@ _SAMPLE_EVENTS = [
     }
 ]
 
-_SAMPLE_ORGANIZER = {
-    "id": "seed_organizer_default",
-    "username": "seed_organizer",
-    "email": "seed_organizer@eventshub.local",
-    "role": "organizer"
-}
 
-
-def seed_default_local_events(app):
-    from app.models import Event, User
-
-    if not app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite:///') and not app.config.get('SEED_SAMPLE_DATA'):
-        return
-
+def seed():
+    app = create_app()
     with app.app_context():
         db.create_all()
 
-        if Event.query.count() > 0:
-            return
-
-        organizer = db.session.get(User, _SAMPLE_ORGANIZER['id'])
+        organizer = db.session.get(User, SAMPLE_ORGANIZER['id'])
         if not organizer:
             organizer = User(
-                id=_SAMPLE_ORGANIZER['id'],
-                username=_SAMPLE_ORGANIZER['username'],
-                email=_SAMPLE_ORGANIZER['email'],
-                role=_SAMPLE_ORGANIZER['role']
+                id=SAMPLE_ORGANIZER['id'],
+                username=SAMPLE_ORGANIZER['username'],
+                email=SAMPLE_ORGANIZER['email'],
+                role=SAMPLE_ORGANIZER['role']
             )
             db.session.add(organizer)
             db.session.commit()
 
-        for event_data in _SAMPLE_EVENTS:
+        existing_event_count = Event.query.count()
+        if existing_event_count >= 6:
+            print(f"Sono già presenti {existing_event_count} eventi nel database. Nessun seed necessario.")
+            return
+
+        for event_data in SAMPLE_EVENTS:
             if Event.query.filter_by(title=event_data['title']).first():
                 continue
-            event = Event(
+            new_event = Event(
                 title=event_data['title'],
                 description=event_data['description'],
                 date=datetime.fromisoformat(event_data['date']),
@@ -123,55 +121,13 @@ def seed_default_local_events(app):
                 total_slots=event_data['total_slots'],
                 available_slots=event_data['available_slots'],
                 image_path=event_data['image_path'],
-                organizer_id=_SAMPLE_ORGANIZER['id']
+                organizer_id=SAMPLE_ORGANIZER['id']
             )
-            db.session.add(event)
+            db.session.add(new_event)
 
         db.session.commit()
+        print(f"Seed completato: inseriti {Event.query.count() - existing_event_count} nuovi eventi.")
 
 
-def create_app():
-    app = Flask(__name__)
-    
-    # 2. Carica tutte le configurazioni (Aiven + Keycloak) dal file config.py
-    app.config.from_object(Config)
-    
-    # 3. Collega SQLAlchemy e Migrate all'app Flask
-    db.init_app(app)
-    migrate.init_app(app, db)
-    
-    # Configurazione CORS estesa per Codespaces/Docker
-    CORS(app, resources={r"/api/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With", "Accept"]
-    }})
-    
-    @app.after_request
-    def add_cors_headers(response):
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        return response
-
-    # 4. Inizializza il gestore dei JWT di Keycloak
-    jwt = JWTManager(app)
-    
-    # 5. REGISTRAZIONE BLUEPRINT
-    from app.routes.auth import auth_bp
-    from app.routes.events import events_bp
-    from app.routes.tickets import tickets_bp  
-    from app.routes.reviews import reviews_bp  # <--- AGGIUNTO
-    
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(events_bp, url_prefix='/api/events')
-    app.register_blueprint(tickets_bp, url_prefix='/api/tickets')  
-    app.register_blueprint(reviews_bp, url_prefix='/api/reviews')  # <--- AGGIUNTO
-
-    @app.route('/')
-    def index():
-        return {"message": "EventHub Backend API is running (CORS & Aiven DB Active)!"}, 200
-
-    seed_default_local_events(app)
-
-    return app
+if __name__ == '__main__':
+    seed()

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
+import { resolveCodespacesServiceUrl } from './url-utils';
 
 export interface UserState {
   username: string;
@@ -16,9 +17,8 @@ export class AuthService {
   private http = inject(HttpClient);
   private clientId = 'eventhub-frontend'; 
 
-  // URL FISSI E CORRETTI PER IL TUO CODESPACE ATTUALE
-  private keycloakTokenUrl = 'https://turbo-space-waffle-7v795j7r79rq3r5jg-8080.app.github.dev/realms/EventHub/protocol/openid-connect/token';
-  private flaskApiUrl = 'https://turbo-space-waffle-7v795j7r79rq3r5jg-5000.app.github.dev/api/auth/register';
+  private readonly keycloakTokenUrl = `${resolveCodespacesServiceUrl(8080)}/realms/EventHub/protocol/openid-connect/token`;
+  private readonly flaskApiUrl = `${resolveCodespacesServiceUrl(5000)}/api/auth/register`;
 
   private currentUserSubject = new BehaviorSubject<UserState | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();

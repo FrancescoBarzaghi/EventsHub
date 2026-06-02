@@ -27,6 +27,46 @@ def get_admin_token():
         print(f"[KEYCLOAK ERROR] Impossibile ottenere Admin Token: {str(e)}")
         return None
 
+@auth_bp.route('/login', methods=['POST', 'OPTIONS'])
+def login():
+    if request.method == 'OPTIONS':
+        return jsonify({"message": "OK"}), 200
+
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({"message": "username e password sono obbligatori"}), 400
+
+    keycloak_url = current_app.config.get('KEYCLOAK_INTERNAL_URL', 'http://127.0.0.1:8080')
+    realm_name = current_app.config.get('REALM_NAME', 'EventHub')
+    token_url = f"{keycloak_url}/realms/{realm_name}/protocol/openid-connect/token"
+
+    payload = {
+        'grant_type': 'password',
+        'client_id': 'eventhub-frontend',
+        'username': username,
+        'password': password
+    }
+
+    try:
+        response = requests.post(token_url, data=payload, verify=False, timeout=10)
+    except Exception as e:
+        return jsonify({"message": f"Errore di connessione interna a Keycloak: {str(e)}"}), 500
+
+    try:
+        error_payload = response.json()
+    except ValueError:
+        error_payload = {"message": "Errore non riconosciuto durante l'autenticazione"}
+
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    return jsonify(error_payload), response.status_code
+
 @auth_bp.route('/register', methods=['POST', 'OPTIONS'])
 def register():
     if request.method == 'OPTIONS':
