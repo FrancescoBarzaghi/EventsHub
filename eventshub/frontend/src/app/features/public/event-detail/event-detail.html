@@ -1,16 +1,28 @@
-<div class="min-h-screen bg-background flex flex-col justify-between" *ngIf="event">
+<div class="min-h-screen bg-background flex flex-col justify-between">
   <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    
-    <div class="relative h-[320px] md:h-[400px] w-full overflow-hidden rounded-xl bg-muted border border-border shadow-sm mb-8">
-      <img [src]="event.image" [alt]="event.title" class="w-full h-full object-cover" />
-      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-      <div class="absolute bottom-6 left-6 text-white space-y-2">
-        <span class="inline-flex bg-primary/90 text-primary-foreground text-xs px-2.5 py-0.5 rounded-full font-semibold">{{ event.category }}</span>
-        <h1 class="text-3xl md:text-4xl font-extrabold font-serif-title tracking-tight">{{ event.title }}</h1>
+    <ng-container *ngIf="loading">
+      <div class="rounded-lg border border-border bg-card p-10 text-center text-sm text-muted-foreground">
+        Caricamento evento in corso...
       </div>
-    </div>
+    </ng-container>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <ng-container *ngIf="!loading && errorMessage">
+      <div class="rounded-lg border border-border bg-card p-10 text-center text-sm text-destructive">
+        {{ errorMessage }}
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!loading && event">
+      <div class="relative h-[320px] md:h-[400px] w-full overflow-hidden rounded-xl bg-muted border border-border shadow-sm mb-8">
+        <img [src]="event.image" [alt]="event.title" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+        <div class="absolute bottom-6 left-6 text-white space-y-2">
+          <span class="inline-flex bg-primary/90 text-primary-foreground text-xs px-2.5 py-0.5 rounded-full font-semibold">{{ event.category }}</span>
+          <h1 class="text-3xl md:text-4xl font-extrabold font-serif-title tracking-tight">{{ event.title }}</h1>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
       <div class="lg:col-span-2 space-y-8">
         <div class="bg-card text-card-foreground p-6 rounded-lg border border-border shadow-sm space-y-4">
@@ -109,6 +121,7 @@
       </div>
 
     </div>
+    </ng-container>
   </div>
   <app-footer></app-footer>
 </div>

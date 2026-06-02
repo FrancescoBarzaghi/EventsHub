@@ -155,6 +155,7 @@ def create_app():
         return response
 
     # 4. Inizializza il gestore dei JWT di Keycloak
+    # Flask-JWT-Extended usa automaticamente JWT_ALGORITHM e JWT_JWKS_URI dalla config
     jwt = JWTManager(app)
     
     # 5. REGISTRAZIONE BLUEPRINT
