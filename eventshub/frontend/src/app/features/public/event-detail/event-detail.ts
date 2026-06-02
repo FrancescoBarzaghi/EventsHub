@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
@@ -8,7 +9,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer';
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule, FooterComponent],
+  imports: [CommonModule, HttpClientModule, RouterModule, FormsModule, LucideAngularModule, FooterComponent],
   templateUrl: './event-detail.html'
 })
 export class EventDetailComponent implements OnInit {
@@ -25,23 +26,54 @@ export class EventDetailComponent implements OnInit {
     { id: 2, user: 'Elena V.', rating: 4, text: 'Ottima musica e acustica perfetta, unica pecca la fila all’ingresso.', date: '2025-02-12' }
   ];
 
-  allEvents = [
-    { id: 1, title: 'Festival Jazz Italiano 2025', category: 'Musica', date: '2025-06-15', location: 'Milano, Teatro Nazionale', price: 45, image: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800', rating: 4.8, organizer: 'Jazz Prod srl', desc: 'Il più grande festival dedicato al jazz d’autore in Italia. Tre giorni di performance dal vivo con artisti di calibro internazionale, contaminazioni musicali d’avanguardia ed una splendida cornice scenografica.' },
-    { id: 2, title: 'Conferenza Tech Innovation', category: 'Tecnologia', date: '2025-05-20', location: 'Roma, Palazzo dei Congressi', price: 120, image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800', rating: 4.9, organizer: 'Tech Academy', desc: 'Esplora le ultime frontiere dell’Intelligenza Artificiale, dello sviluppo software moderno e del Web3 con relatori d’eccellenza provenienti dalla Silicon Valley.' }
-  ];
-
-  constructor(private route: ActivatedRoute) {}
+  constructor(private route: ActivatedRoute, private http: HttpClient) {}
 
   ngOnInit() {
     this.route.params.subscribe(params => {
       const id = +params['id'];
-      this.event = this.allEvents.find(e => e.id === id) || this.allEvents[0];
+      if (id) {
+        this.loadEvent(id);
+      }
+    });
+  }
+
+  loadEvent(eventId: number) {
+    this.http.get<any>(`/api/events/${eventId}`).subscribe({
+      next: (data) => {
+        this.event = {
+          id: data.id,
+          title: data.title,
+          desc: data.description,
+          category: data.category,
+          date: data.date,
+          location: data.location,
+          organizer: data.organizer_id || 'Organizzatore',
+          price: data.price,
+          image: data.image_path,
+          available_slots: data.available_slots,
+          total_slots: data.total_slots
+        };
+      },
+      error: (err) => {
+        console.error('Errore caricamento evento:', err);
+      }
     });
   }
 
   buyTickets() {
-    this.purchaseSuccess = true;
-    setTimeout(() => this.purchaseSuccess = false, 4000);
+    if (!this.event?.id) {
+      return;
+    }
+
+    this.http.post('/api/tickets', { event_id: this.event.id }).subscribe({
+      next: () => {
+        this.purchaseSuccess = true;
+        setTimeout(() => this.purchaseSuccess = false, 4000);
+      },
+      error: (err) => {
+        console.error('Errore durante l’acquisto:', err);
+      }
+    });
   }
 
   addReview() {
