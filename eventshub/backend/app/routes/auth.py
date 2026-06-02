@@ -42,9 +42,8 @@ def register():
     password = data.get('password')
     name = data.get('name')
     
-    # Determiniamo il nome del gruppo su Keycloak (User o Organizer)
+    # Determiniamo il ruolo esatto da assegnare (user o organizer)
     requested_role = str(data.get('role', 'user')).strip().lower()
-    group_name = "Organizer" if requested_role == "organizer" else "User"
 
     if not email or not password or not username:
         return jsonify({"message": "Dati obbligatori mancanti (email, username o password)"}), 400
@@ -94,28 +93,30 @@ def register():
             if user_res.status_code == 200 and len(user_res.json()) > 0:
                 user_id = user_res.json()[0]['id']
 
-                # 3. Recuperiamo l'ID del Gruppo (User o Organizer) su Keycloak
-                search_group_url = f"{keycloak_url}/admin/realms/{realm_name}/groups?search={group_name}"
-                group_res = requests.get(search_group_url, headers=headers, verify=False, timeout=10)
+                # 3. Recuperiamo i dettagli del Ruolo direttamente dal Realm di Keycloak
+                get_role_url = f"{keycloak_url}/admin/realms/{realm_name}/roles/{requested_role}"
+                role_res = requests.get(get_role_url, headers=headers, verify=False, timeout=10)
                 
-                if group_res.status_code == 200 and len(group_res.json()) > 0:
-                    # Troviamo l'esatta corrispondenza del gruppo
-                    group = next((g for g in group_res.json() if g['name'] == group_name), None)
-                    if group:
-                        group_id = group['id']
-                        
-                        # 4. Aggiungiamo l'utente al gruppo
-                        join_group_url = f"{keycloak_url}/admin/realms/{realm_name}/users/{user_id}/groups/{group_id}"
-                        requests.put(join_group_url, headers=headers, verify=False, timeout=10)
-                        print(f"[SUCCESS] Utente aggiunto al gruppo {group_name}")
+                if role_res.status_code == 200:
+                    role_data = role_res.json()
+                    
+                    # 4. Assegniamo il Ruolo direttamente all'utente (Mappatura di Realm)
+                    add_role_url = f"{keycloak_url}/admin/realms/{realm_name}/users/{user_id}/role-mappings/realm"
+                    # Keycloak richiede una lista/array di oggetti ruolo
+                    assign_res = requests.post(add_role_url, json=[role_data], headers=headers, verify=False, timeout=10)
+                    
+                    if assign_res.status_code in [200, 204]:
+                        print(f"[SUCCESS] Ruolo '{requested_role}' assegnato direttamente a {username}")
                     else:
-                        print(f"[WARNING] Gruppo {group_name} non trovato nei risultati filtrati.")
+                        print(f"[ERROR] Errore mappatura ruolo. Stato: {assign_res.status_code}, Dettagli: {assign_res.text}")
                 else:
-                    print(f"[WARNING] Impossibile trovare l'ID del gruppo {group_name} su Keycloak.")
+                    print(f"[WARNING] Ruolo '{requested_role}' non trovato nel Realm {realm_name}.")
+            else:
+                print(f"[WARNING] Utente appena creato non trovato durante la ricerca.")
         except Exception as e:
-            print(f"[ERROR] Errore durante l'assegnazione del gruppo: {str(e)}")
+            print(f"[ERROR] Errore durante l'assegnazione diretta del ruolo: {str(e)}")
 
-        return jsonify({"message": "Utente registrato con successo e inserito nel gruppo!"}), 201
+        return jsonify({"message": f"Utente registrato con successo con ruolo {requested_role}!"}), 201
     
     elif response.status_code == 409:
         return jsonify({"message": "Un utente con questa email o username esiste già."}), 409

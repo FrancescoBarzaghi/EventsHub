@@ -24,7 +24,7 @@ export class AuthComponent {
   email = '';
   password = '';
   name = '';
-  role: 'user' | 'organizer' = 'user';
+  role: 'user' | 'organizer' | 'admin' = 'user';
 
   errorMessage = '';
   isLoading = false;
