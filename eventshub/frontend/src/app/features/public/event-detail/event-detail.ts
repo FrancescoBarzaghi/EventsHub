@@ -63,8 +63,8 @@ export class EventDetailComponent implements OnInit {
           organizer: data.organizer_id || 'Organizzatore',
           price: data.price,
           image: data.image_path
-          ? `${BACKEND_API_BASE}${data.image_path}`
-          : null,
+            ? `${BACKEND_API_BASE}${data.image_path}`
+            : null,
           available_slots: data.available_slots,
           total_slots: data.total_slots
         };
@@ -85,7 +85,6 @@ export class EventDetailComponent implements OnInit {
       return;
     }
 
-    // Controllo autenticazione
     if (!this.authService.currentUserValue) {
       this.errorMessage = 'Devi essere loggato per acquistare i biglietti.';
       this.router.navigate(['/auth']);
@@ -101,19 +100,16 @@ export class EventDetailComponent implements OnInit {
         this.loading = false;
         this.errorMessage = '';
         setTimeout(() => this.purchaseSuccess = false, 4000);
-        // Dopo l'acquisto, mostra il biglietto nell'area personale
         setTimeout(() => this.router.navigate(['/user/dashboard']), 2000);
       },
       error: (err) => {
         this.loading = false;
         console.error('Errore durante l\'acquisto:', err);
-        
-        // Gestisci solo errori di token scaduto
+
         if (err.status === 401 && err.error?.error?.includes('token')) {
           this.errorMessage = 'Sessione scaduta. Per favore effettua di nuovo il login.';
           this.router.navigate(['/auth']);
         } else {
-          // Per tutti gli altri errori, mostra il messaggio dal backend
           this.errorMessage = err.error?.error || err.error?.message || 'Errore durante l\'acquisto. Riprova.';
         }
       }
@@ -134,7 +130,6 @@ export class EventDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Errore caricamento recensioni:', err);
-        // Non mostrare errore se è 404 (nessun commento ancora)
         if (err.status !== 404) {
           this.reviewError = 'Impossibile caricare i commenti dell\'evento.';
         }
@@ -151,7 +146,6 @@ export class EventDetailComponent implements OnInit {
       return;
     }
 
-    // Controllo autenticazione
     if (!this.authService.currentUserValue) {
       this.reviewError = 'Devi essere loggato per lasciare un commento.';
       this.router.navigate(['/auth']);
@@ -171,20 +165,16 @@ export class EventDetailComponent implements OnInit {
         this.newComment = '';
         this.newRating = 5;
         this.reviewError = '';
-        // Ricarica le review
         this.loadReviews(this.event.id);
-        // Nascondi messaggio di successo dopo 3 secondi
         setTimeout(() => this.reviewSuccess = '', 3000);
       },
       error: (err) => {
         console.error('Errore invio commento:', err);
-        
-        // Gestisci solo errori di token scaduto
+
         if (err.status === 401 && err.error?.error?.includes('token')) {
           this.reviewError = 'Sessione scaduta. Per favore effettua di nuovo il login.';
           this.router.navigate(['/auth']);
         } else {
-          // Per tutti gli altri errori, mostra il messaggio dal backend
           this.reviewError = err.error?.error || err.error?.message || 'Impossibile inviare il commento.';
         }
       }

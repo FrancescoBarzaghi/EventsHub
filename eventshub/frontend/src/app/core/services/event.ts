@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { resolveCodespacesServiceUrl } from './url-utils';
 
 export interface EventData {
   id?: number;
@@ -21,13 +21,10 @@ export interface EventData {
   providedIn: 'root',
 })
 export class EventService {
-  private apiUrl = `${environment.apiUrl}/events`;
+  private apiUrl = `${resolveCodespacesServiceUrl(5000)}/api/events`;
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Recupera la lista degli eventi con filtri opzionali
-   */
   getEvents(filters?: { location?: string; category?: string; max_price?: number; start_date?: string }): Observable<EventData[]> {
     let params = new URLSearchParams();
     if (filters) {
@@ -41,16 +38,10 @@ export class EventService {
     return this.http.get<EventData[]>(url);
   }
 
-  /**
-   * Recupera i dettagli di un singolo evento
-   */
   getEventDetail(eventId: number): Observable<EventData> {
     return this.http.get<EventData>(`${this.apiUrl}/${eventId}`);
   }
 
-  /**
-   * Crea un nuovo evento (organizer)
-   */
   createEvent(eventData: EventData, image?: File): Observable<any> {
     const formData = new FormData();
     formData.append('title', eventData.title);
@@ -60,7 +51,7 @@ export class EventService {
     formData.append('category', eventData.category);
     formData.append('price', eventData.price.toString());
     formData.append('total_slots', eventData.total_slots.toString());
-    
+
     if (image) {
       formData.append('image', image);
     }
@@ -68,16 +59,10 @@ export class EventService {
     return this.http.post<any>(this.apiUrl, formData);
   }
 
-  /**
-   * Elimina un evento (organizer)
-   */
   deleteEvent(eventId: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${eventId}`);
   }
 
-  /**
-   * Aggiorna un evento (organizer)
-   */
   updateEvent(eventId: number, eventData: EventData): Observable<EventData> {
     const formData = new FormData();
     formData.append('title', eventData.title);

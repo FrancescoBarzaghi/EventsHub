@@ -4,6 +4,9 @@ import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { FooterComponent } from '../../../shared/components/footer/footer';
+import { resolveCodespacesServiceUrl } from '../../../core/services/url-utils';
+
+const BACKEND_API_BASE = resolveCodespacesServiceUrl(5000);
 
 @Component({
   selector: 'app-user-dashboard',
@@ -22,7 +25,7 @@ export class DashboardComponent implements OnInit {
   }
 
   loadTickets() {
-    this.http.get<any[]>('/api/tickets/my-tickets').subscribe({
+    this.http.get<any[]>(`${BACKEND_API_BASE}/api/tickets/my-tickets`).subscribe({
       next: (tickets) => {
         this.tickets = tickets.map(t => ({
           id: t.ticket_id,
@@ -49,4 +52,3 @@ export class DashboardComponent implements OnInit {
     this.selectedTicket = null;
   }
 }
-

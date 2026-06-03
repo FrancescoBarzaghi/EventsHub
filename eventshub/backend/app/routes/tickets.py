@@ -62,7 +62,7 @@ def buy_ticket():
             "message": "Iscrizione completata con successo!",
             "ticket_id": new_ticket.id,
             "qr_code_data": qr_hash
-        }), 210
+        }), 201
 
     except Exception as e:
         db.session.rollback()
