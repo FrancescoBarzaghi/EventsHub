@@ -1,9 +1,15 @@
+import json
 from datetime import datetime
+from typing import Any
+
+import requests
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from jwt.algorithms import RSAAlgorithm
 from app.config import Config
 
 # 1. Inizializzazione globale delle estensioni del Database
@@ -86,6 +92,35 @@ _SAMPLE_ORGANIZER = {
     "role": "organizer"
 }
 
+_jwks_cache: dict[str, dict[str, Any]] = {}
+
+
+def _load_jwks(jwks_uri: str) -> dict[str, Any]:
+    cached = _jwks_cache.get(jwks_uri)
+    if cached and cached.get("cache_ts"):
+        return cached["jwks"]
+
+    response = requests.get(jwks_uri, timeout=5)
+    response.raise_for_status()
+    jwks = response.json()
+    _jwks_cache[jwks_uri] = {"jwks": jwks, "cache_ts": True}
+    return jwks
+
+
+def _get_rsa_key_from_jwks(unverified_headers: dict[str, Any], jwks_uri: str) -> str:
+    kid = unverified_headers.get("kid")
+    if not kid:
+        raise RuntimeError("JWT header missing 'kid' for JWKS lookup")
+
+    jwks = _load_jwks(jwks_uri)
+    for jwk in jwks.get("keys", []):
+        if jwk.get("kid") == kid:
+            pubkey = RSAAlgorithm.from_jwk(json.dumps(jwk))
+            pem = pubkey.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
+            return pem.decode('utf-8')
+
+    raise RuntimeError(f"JWKS key with kid={kid} not found")
+
 
 def seed_default_local_events(app):
     from app.models import Event, User
@@ -155,8 +190,25 @@ def create_app():
         return response
 
     # 4. Inizializza il gestore dei JWT di Keycloak
-    # Flask-JWT-Extended usa automaticamente JWT_ALGORITHM e JWT_JWKS_URI dalla config
     jwt = JWTManager(app)
+
+    @jwt.decode_key_loader
+    def load_jwt_decode_key(unverified_headers, unverified_claims):
+        jwks_uri = app.config.get('JWT_JWKS_URI')
+        app.logger.debug('JWT decode key loader called, jwks_uri=%s, kid=%s', jwks_uri, unverified_headers.get('kid'))
+        app.logger.debug('Unverified headers: %s', unverified_headers)
+        app.logger.debug('Unverified claims: %s', unverified_claims)
+        if jwks_uri:
+            try:
+                key = _get_rsa_key_from_jwks(unverified_headers, jwks_uri)
+                app.logger.debug('JWT decode public key loaded from JWKS, kid=%s', unverified_headers.get('kid'))
+                return key
+            except Exception as e:
+                app.logger.error('Impossibile caricare la chiave JWKS: %s', e)
+                raise RuntimeError(f"Impossibile caricare la chiave JWKS: {e}")
+
+        # Fallback: usa JWT_PUBLIC_KEY o SECRET_KEY se JWKS non è configurato.
+        return app.config.get('JWT_PUBLIC_KEY') or app.config.get('SECRET_KEY')
     
     # 5. REGISTRAZIONE BLUEPRINT
     from app.routes.auth import auth_bp
@@ -210,5 +262,26 @@ def create_app():
             return jsonify({"status": "Authorization header mancante"}), 401
 
     seed_default_local_events(app)
+
+    # === JWT ERROR HANDLERS (debug) ===
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error_string):
+        app.logger.error('JWT invalid_token_loader invoked: %s', error_string)
+        return jsonify({'msg': 'Invalid token', 'error': error_string}), 401
+
+    @jwt.unauthorized_loader
+    def unauthorized_callback(error_string):
+        app.logger.error('JWT unauthorized_loader invoked: %s', error_string)
+        return jsonify({'msg': 'Missing or invalid Authorization header', 'error': error_string}), 401
+
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        app.logger.error('JWT expired_token_loader invoked; header=%s payload=%s', jwt_header, jwt_payload)
+        return jsonify({'msg': 'Token expired'}), 401
+
+    @jwt.revoked_token_loader
+    def revoked_token_callback(jwt_header, jwt_payload):
+        app.logger.error('JWT revoked_token_loader invoked; header=%s payload=%s', jwt_header, jwt_payload)
+        return jsonify({'msg': 'Token revoked'}), 401
 
     return app

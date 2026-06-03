@@ -62,7 +62,9 @@ export class EventDetailComponent implements OnInit {
           location: data.location,
           organizer: data.organizer_id || 'Organizzatore',
           price: data.price,
-          image: data.image_path,
+          image: data.image_path
+          ? `${BACKEND_API_BASE}${data.image_path}`
+          : null,
           available_slots: data.available_slots,
           total_slots: data.total_slots
         };

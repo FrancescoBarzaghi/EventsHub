@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, send_from_directory
 from werkzeug.utils import secure_filename
 from app import db
 from app.models import Event
@@ -7,6 +7,13 @@ from app.decorators import token_required
 from datetime import datetime
 
 events_bp = Blueprint('events', __name__)
+
+@events_bp.route('/images/<filename>', methods=['GET'])
+def get_image(filename):
+    return send_from_directory(
+        current_app.config['UPLOAD_FOLDER'],
+        filename
+    )
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -39,7 +46,7 @@ def get_events():
         except ValueError:
             pass
 
-    # Filtro dinamico per Data (Mostra eventi da una data specifica in poi)
+    # Filtro dinamico per Data
     start_date = request.args.get('start_date')
     if start_date:
         try:
@@ -48,11 +55,10 @@ def get_events():
         except ValueError:
             pass
     else:
-        # Di default, mostra solo eventi che devono ancora svolgersi (futuri)
         query = query.filter(Event.date >= datetime.utcnow())
 
     events = query.order_by(Event.date.asc()).all()
-    
+
     output = []
     for event in events:
         output.append({
@@ -65,19 +71,23 @@ def get_events():
             "price": event.price,
             "total_slots": event.total_slots,
             "available_slots": event.available_slots,
-            "image_path": event.image_path
+            "image_path": (
+                f"/api/events/images/{os.path.basename(event.image_path)}"
+                if event.image_path else None
+            )
         })
-    
+
     return jsonify(output), 200
 
 
-# GET http://localhost:5000/api/events/<id> - Dettaglio del singolo evento
+# GET http://localhost:5000/api/events/<id>
 @events_bp.route('/<int:event_id>', methods=['GET'])
 def get_event_detail(event_id):
     event = Event.query.get(event_id)
+
     if not event:
         return jsonify({"error": "Evento non trovato"}), 404
-        
+
     return jsonify({
         "id": event.id,
         "title": event.title,
@@ -88,7 +98,10 @@ def get_event_detail(event_id):
         "price": event.price,
         "total_slots": event.total_slots,
         "available_slots": event.available_slots,
-        "image_path": event.image_path,
+        "image_path": (
+            f"/api/events/images/{os.path.basename(event.image_path)}"
+            if event.image_path else None
+        ),
         "organizer_id": event.organizer_id
     }), 200
 
@@ -97,19 +110,16 @@ def get_event_detail(event_id):
 # 2. ROTTE PROTETTE (Richiedono il ruolo "organizer" o "admin")
 # =========================================================================
 
-# POST http://localhost:5000/api/events - Creazione evento con upload immagine (form-data)
 @events_bp.route('', methods=['POST'])
 @token_required(required_role="organizer")
 def create_event():
-    # Estraggo l'ID univoco dell'utente (sub) fornito dal token Keycloak
-    # Nota: Keycloak popola request.user_info tramite il tuo decoratore token_required
-    current_user_id = request.user_info.get("sub") 
+
+    current_user_id = request.user_info.get("sub")
     username_organizer = request.user_info.get("preferred_username")
 
-    # Estrazione dei dati testuali inviati come multipart/form-data
     title = request.form.get('title')
     description = request.form.get('description')
-    date_str = request.form.get('date')       # Formato atteso: YYYY-MM-DD HH:MM
+    date_str = request.form.get('date')
     location = request.form.get('location')
     category = request.form.get('category')
     price = request.form.get('price', 0.0)
@@ -118,21 +128,28 @@ def create_event():
     if not all([title, description, date_str, location, category, total_slots]):
         return jsonify({"error": "Tutti i campi obbligatori devono essere compilati"}), 400
 
-    # Gestione dell'immagine di copertina
     image_filename = None
+
     if 'image' in request.files:
         file = request.files['image']
+
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            # Rendo univoco il file con un timestamp per prevenire sovrascritture accidentali
             unique_filename = f"{int(datetime.utcnow().timestamp())}_{filename}"
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename))
+
+            file.save(
+                os.path.join(
+                    current_app.config['UPLOAD_FOLDER'],
+                    unique_filename
+                )
+            )
+
             image_filename = f"static/uploads/{unique_filename}"
 
     try:
         event_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M')
         slots = int(total_slots)
-        
+
         new_event = Event(
             title=title,
             description=description,
@@ -141,7 +158,7 @@ def create_event():
             category=category,
             price=float(price),
             total_slots=slots,
-            available_slots=slots,  # Inizialmente tutti i posti sono liberi
+            available_slots=slots,
             image_path=image_filename,
             organizer_id=current_user_id
         )
@@ -156,78 +173,106 @@ def create_event():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Errore interno nel salvataggio su database: {str(e)}"}), 500
+
+        return jsonify({
+            "error": f"Errore interno nel salvataggio su database: {str(e)}"
+        }), 500
 
 
-# PUT http://localhost:5000/api/events/<id> - Modifica totale/parziale di un evento
 @events_bp.route('/<int:event_id>', methods=['PUT'])
 @token_required(required_role="organizer")
 def update_event(event_id):
+
     current_user_id = request.user_info.get("sub")
     event = Event.query.get(event_id)
 
     if not event:
         return jsonify({"error": "Evento non trovato"}), 404
 
-    # Controllo di sicurezza: solo l'organizzatore proprietario può modificarlo
     if event.organizer_id != current_user_id:
         return jsonify({"error": "Non sei autorizzato a modificare questo evento"}), 403
 
-    # Aggiornamento campi testuali dal form
     event.title = request.form.get('title', event.title)
     event.description = request.form.get('description', event.description)
     event.location = request.form.get('location', event.location)
     event.category = request.form.get('category', event.category)
-    
+
     if request.form.get('price'):
         event.price = float(request.form.get('price'))
-        
+
     if request.form.get('date'):
         try:
-            event.date = datetime.strptime(request.form.get('date'), '%Y-%m-%d %H:%M')
+            event.date = datetime.strptime(
+                request.form.get('date'),
+                '%Y-%m-%d %H:%M'
+            )
         except ValueError:
-            return jsonify({"error": "Formato data non valido. Usa YYYY-MM-DD HH:MM"}), 400
+            return jsonify({
+                "error": "Formato data non valido. Usa YYYY-MM-DD HH:MM"
+            }), 400
 
-    # Gestione di una nuova eventuale immagine sostitutiva
     if 'image' in request.files:
         file = request.files['image']
+
         if file and allowed_file(file.filename):
-            # Cancella il vecchio file locale per pulire il server
+
             if event.image_path:
-                old_path = os.path.join(current_app.root_path, 'app', event.image_path)
+                old_path = os.path.join(
+                    current_app.root_path,
+                    'app',
+                    event.image_path
+                )
+
                 if os.path.exists(old_path):
                     os.remove(old_path)
 
             filename = secure_filename(file.filename)
             unique_filename = f"{int(datetime.utcnow().timestamp())}_{filename}"
-            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename))
+
+            file.save(
+                os.path.join(
+                    current_app.config['UPLOAD_FOLDER'],
+                    unique_filename
+                )
+            )
+
             event.image_path = f"static/uploads/{unique_filename}"
 
     db.session.commit()
-    return jsonify({"message": "Evento aggiornato con successo"}), 200
+
+    return jsonify({
+        "message": "Evento aggiornato con successo"
+    }), 200
 
 
-# DELETE http://localhost:5000/api/events/<id> - Cancellazione definitiva di un evento
 @events_bp.route('/<int:event_id>', methods=['DELETE'])
 @token_required(required_role="organizer")
 def delete_event(event_id):
+
     current_user_id = request.user_info.get("sub")
     event = Event.query.get(event_id)
 
     if not event:
         return jsonify({"error": "Evento non trovato"}), 404
 
-    # Controllo di sicurezza: solo l'organizzatore proprietario può eliminarlo
     if event.organizer_id != current_user_id:
-        return jsonify({"error": "Non sei autorizzato a eliminare questo evento"}), 403
+        return jsonify({
+            "error": "Non sei autorizzato a eliminare questo evento"
+        }), 403
 
-    # Rimuove il file dell'immagine fisicamente dal server
     if event.image_path:
-        img_path = os.path.join(current_app.root_path, 'app', event.image_path)
+        img_path = os.path.join(
+            current_app.root_path,
+            'app',
+            event.image_path
+        )
+
         if os.path.exists(img_path):
             os.remove(img_path)
 
     db.session.delete(event)
     db.session.commit()
-    
-    return jsonify({"message": "Evento eliminato definitivamente dal sistema"}), 200
+
+    return jsonify({
+        "message": "Evento eliminato definitivamente dal sistema"
+    }), 200
