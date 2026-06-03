@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Flask
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
@@ -172,6 +172,42 @@ def create_app():
     @app.route('/')
     def index():
         return {"message": "EventHub Backend API is running (CORS & Aiven DB Active)!"}, 200
+
+    # === ENDPOINT DI DEBUG ===
+    @app.route('/api/debug/token', methods=['GET', 'POST', 'OPTIONS'])
+    def debug_token():
+        """Endpoint di debug per verificare il token ricevuto"""
+        if request.method == 'OPTIONS':
+            return "", 204
+        
+        auth_header = request.headers.get('Authorization', '')
+        print(f"\n🔍 DEBUG /api/debug/token:")
+        print(f"   Authorization header: {auth_header[:50]}..." if auth_header else "   Authorization header: MANCANTE")
+        print(f"   All headers: {dict(request.headers)}\n")
+        
+        if auth_header:
+            parts = auth_header.split()
+            if len(parts) == 2 and parts[0] == 'Bearer':
+                token = parts[1]
+                print(f"   Token ricevuto (primi 50 caratteri): {token[:50]}...")
+                
+                # Prova a decodificare il token (senza verificare la firma)
+                try:
+                    from jwt import decode as jwt_decode
+                    decoded = jwt_decode(token, options={"verify_signature": False})
+                    print(f"   Token decodificato: {decoded}\n")
+                    return jsonify({
+                        "status": "Token ricevuto e decodificato",
+                        "decoded": decoded,
+                        "issuer": decoded.get("iss")
+                    }), 200
+                except Exception as e:
+                    print(f"   Errore decodifica: {str(e)}\n")
+                    return jsonify({"status": "Errore decodifica token", "error": str(e)}), 400
+            else:
+                return jsonify({"status": "Header formato non valido (atteso: 'Bearer <token>')"})
+        else:
+            return jsonify({"status": "Authorization header mancante"}), 401
 
     seed_default_local_events(app)
 

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
@@ -13,7 +13,7 @@ const BACKEND_API_BASE = resolveCodespacesServiceUrl(5000);
 @Component({
   selector: 'app-event-detail',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, RouterModule, FormsModule, LucideAngularModule, FooterComponent],
+  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule, FooterComponent],
   templateUrl: './event-detail.html'
 })
 export class EventDetailComponent implements OnInit {
@@ -90,21 +90,29 @@ export class EventDetailComponent implements OnInit {
       return;
     }
 
+    this.loading = true;
+    this.errorMessage = '';
+
     this.http.post(`${BACKEND_API_BASE}/api/tickets`, { event_id: this.event.id }).subscribe({
-      next: () => {
+      next: (response) => {
         this.purchaseSuccess = true;
+        this.loading = false;
+        this.errorMessage = '';
         setTimeout(() => this.purchaseSuccess = false, 4000);
         // Dopo l'acquisto, mostra il biglietto nell'area personale
-        this.router.navigate(['/user/dashboard']);
+        setTimeout(() => this.router.navigate(['/user/dashboard']), 2000);
       },
       error: (err) => {
+        this.loading = false;
         console.error('Errore durante l\'acquisto:', err);
-        if (err.status === 401) {
+        
+        // Gestisci solo errori di token scaduto
+        if (err.status === 401 && err.error?.error?.includes('token')) {
           this.errorMessage = 'Sessione scaduta. Per favore effettua di nuovo il login.';
-          this.authService.logout();
           this.router.navigate(['/auth']);
         } else {
-          this.errorMessage = err.error?.error || 'Errore durante l\'acquisto. Riprova.';
+          // Per tutti gli altri errori, mostra il messaggio dal backend
+          this.errorMessage = err.error?.error || err.error?.message || 'Errore durante l\'acquisto. Riprova.';
         }
       }
     });
@@ -124,13 +132,17 @@ export class EventDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Errore caricamento recensioni:', err);
-        this.reviewError = 'Impossibile caricare i commenti dell\'evento.';
+        // Non mostrare errore se è 404 (nessun commento ancora)
+        if (err.status !== 404) {
+          this.reviewError = 'Impossibile caricare i commenti dell\'evento.';
+        }
       }
     });
   }
 
   addReview() {
     if (!this.newComment.trim()) {
+      this.reviewError = 'Scrivi un commento prima di inviare.';
       return;
     }
     if (!this.event?.id) {
@@ -156,15 +168,21 @@ export class EventDetailComponent implements OnInit {
         this.reviewSuccess = 'Commento aggiunto con successo!';
         this.newComment = '';
         this.newRating = 5;
+        this.reviewError = '';
+        // Ricarica le review
         this.loadReviews(this.event.id);
+        // Nascondi messaggio di successo dopo 3 secondi
+        setTimeout(() => this.reviewSuccess = '', 3000);
       },
       error: (err) => {
         console.error('Errore invio commento:', err);
-        if (err.status === 401) {
+        
+        // Gestisci solo errori di token scaduto
+        if (err.status === 401 && err.error?.error?.includes('token')) {
           this.reviewError = 'Sessione scaduta. Per favore effettua di nuovo il login.';
-          this.authService.logout();
           this.router.navigate(['/auth']);
         } else {
+          // Per tutti gli altri errori, mostra il messaggio dal backend
           this.reviewError = err.error?.error || err.error?.message || 'Impossibile inviare il commento.';
         }
       }

@@ -11,7 +11,7 @@ import { LucideAngularModule,
   BarChart3, PlusCircle, Shield, Menu, X, MapPin, Clock, Users, 
   Download, Filter, ChevronDown, Edit, Trash2, Eye, TrendingUp, 
   DollarSign, FileText, Flag, UserCog, QrCode, Upload, Mail, Lock, Moon, Sun,
-  ArrowRight 
+  ArrowRight, CheckCircle, AlertCircle, Loader
 } from 'lucide-angular';
 
 export const appConfig: ApplicationConfig = {
@@ -35,7 +35,7 @@ export const appConfig: ApplicationConfig = {
         BarChart3, PlusCircle, Shield, Menu, X, MapPin, Clock, Users, 
         Download, Filter, ChevronDown, Edit, Trash2, Eye, TrendingUp, 
         DollarSign, FileText, Flag, UserCog, QrCode, Upload, Mail, Lock, Moon, Sun,
-        ArrowRight
+        ArrowRight, CheckCircle, AlertCircle, Loader
       })
     )
   ]

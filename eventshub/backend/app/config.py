@@ -39,12 +39,15 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = engine_options
 
     # --- CONFIGURAZIONE KEYCLOAK (JWT) ---
-    # Sostituito il vecchio fallback 'http://keycloak:8080' con 'http://127.0.0.1:8080'
+    # In Codespaces: usa l'URL pubblica (stessa che usa il frontend per autenticarsi)
+    # Questa deve corrispondere all'issuer nel JWT token
     KEYCLOAK_INTERNAL_URL = os.environ.get('KEYCLOAK_INTERNAL_URL', 'http://127.0.0.1:8080')
+    KEYCLOAK_PUBLIC_URL = os.environ.get('KEYCLOAK_PUBLIC_URL', KEYCLOAK_INTERNAL_URL)
     REALM_NAME = os.environ.get('REALM_NAME', 'EventHub')
     
     JWT_ALGORITHM = "RS256"
-    JWT_JWKS_URI = f"{KEYCLOAK_INTERNAL_URL}/realms/{REALM_NAME}/protocol/openid-connect/certs"
+    # Usa l'URL pubblica per validare il token JWT (deve essere l'issuer nel token)
+    JWT_JWKS_URI = f"{KEYCLOAK_PUBLIC_URL}/realms/{REALM_NAME}/protocol/openid-connect/certs"
 
     # --- CONFIGURAZIONE UPLOAD LOCALE LOCANDINE ---
     UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')

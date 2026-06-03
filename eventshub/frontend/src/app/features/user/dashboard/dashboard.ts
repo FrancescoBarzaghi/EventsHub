@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { FooterComponent } from '../../../shared/components/footer/footer';
@@ -8,7 +8,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer';
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, RouterModule, LucideAngularModule, FooterComponent],
+  imports: [CommonModule, RouterModule, LucideAngularModule, FooterComponent],
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent implements OnInit {

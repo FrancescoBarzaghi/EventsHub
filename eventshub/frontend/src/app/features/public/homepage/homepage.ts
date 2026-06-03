@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { LucideAngularModule } from 'lucide-angular';
 import { EventCardComponent } from '../../../shared/components/event-card/event-card';
 import { FooterComponent } from '../../../shared/components/footer/footer';
@@ -12,7 +12,7 @@ const BACKEND_API_BASE = resolveCodespacesServiceUrl(5000);
 @Component({
   selector: 'app-homepage',
   standalone: true,
-  imports: [CommonModule, RouterModule, HttpClientModule, LucideAngularModule, EventCardComponent, FooterComponent],
+  imports: [CommonModule, RouterModule, LucideAngularModule, EventCardComponent, FooterComponent],
   templateUrl: './homepage.html'
 })
 export class HomepageComponent implements OnInit {

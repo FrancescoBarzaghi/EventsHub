@@ -62,6 +62,15 @@ export class AuthService {
 
         localStorage.setItem('access_token', res.access_token);
         localStorage.setItem('eventhub_session', JSON.stringify(userState));
+        
+        // Debug: verifica che il token sia salvato
+        const tokenCheck = localStorage.getItem('access_token');
+        console.log('✅ Login erfolgt:', {
+          tokenSaved: !!tokenCheck,
+          tokenPreview: tokenCheck ? tokenCheck.substring(0, 50) + '...' : 'MANCANTE',
+          roles: allRoles
+        });
+        
         this.currentUserSubject.next(userState);
       })
     );

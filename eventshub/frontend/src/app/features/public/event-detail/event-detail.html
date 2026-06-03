@@ -53,6 +53,20 @@
             <span>Recensioni ({{ reviews.length }})</span>
           </h3>
 
+          @if (reviewError) {
+            <div class="bg-red-50 border border-red-200 text-red-800 text-xs rounded p-3 flex items-center gap-2">
+              <lucide-icon name="alert-circle" class="h-4 w-4 flex-shrink-0"></lucide-icon>
+              {{ reviewError }}
+            </div>
+          }
+
+          @if (reviewSuccess) {
+            <div class="bg-green-50 border border-green-200 text-green-800 text-xs rounded p-3 flex items-center gap-2">
+              <lucide-icon name="check-circle" class="h-4 w-4 flex-shrink-0"></lucide-icon>
+              {{ reviewSuccess }}
+            </div>
+          }
+
           <div class="bg-card border border-border rounded-lg p-5 shadow-sm space-y-3">
             <div class="flex items-center gap-2">
               <label class="text-sm font-semibold">Il tuo voto:</label>
@@ -66,7 +80,14 @@
             </div>
             <textarea [(ngModel)]="newComment" placeholder="Condividi la tua opinione su questo evento..." class="w-full bg-background border border-input rounded-md p-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring min-h-[80px]"></textarea>
             <div class="flex justify-end">
-              <button (click)="addReview()" class="bg-primary text-primary-foreground text-xs font-semibold rounded-md hover:bg-primary/90 px-4 py-2 shadow-sm">Invia Recensione</button>
+              <button (click)="addReview()" class="bg-primary text-primary-foreground text-xs font-semibold rounded-md hover:bg-primary/90 px-4 py-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" [disabled]="!newComment.trim() || loading">
+                @if (loading) {
+                  <lucide-icon name="loader" class="h-3 w-3 animate-spin"></lucide-icon>
+                  Invio in corso...
+                } @else {
+                  Invia Recensione
+                }
+              </button>
             </div>
           </div>
 
@@ -97,9 +118,9 @@
           <div class="space-y-2 border-t border-border pt-4">
             <label class="text-sm font-semibold">Quantità biglietti</label>
             <div class="flex items-center gap-3">
-              <button (click)="ticketCount = ticketCount > 1 ? ticketCount - 1 : 1" class="border border-input bg-background hover:bg-accent h-8 w-8 rounded flex items-center justify-center font-bold text-lg">-</button>
+              <button (click)="ticketCount = ticketCount > 1 ? ticketCount - 1 : 1" class="border border-input bg-background hover:bg-accent h-8 w-8 rounded flex items-center justify-center font-bold text-lg" [disabled]="loading">-</button>
               <span class="font-bold text-base w-6 text-center">{{ ticketCount }}</span>
-              <button (click)="ticketCount = ticketCount + 1" class="border border-input bg-background hover:bg-accent h-8 w-8 rounded flex items-center justify-center font-bold text-lg">+</button>
+              <button (click)="ticketCount = ticketCount + 1" class="border border-input bg-background hover:bg-accent h-8 w-8 rounded flex items-center justify-center font-bold text-lg" [disabled]="loading">+</button>
             </div>
           </div>
 
@@ -108,15 +129,37 @@
             <span class="text-xl text-primary">€{{ event.price * ticketCount }}</span>
           </div>
 
-          <button (click)="buyTickets()" class="w-full bg-primary text-primary-foreground h-10 rounded-md font-medium hover:bg-primary/90 transition-colors shadow-sm">
-            Prenota Ora
+          <button (click)="buyTickets()" class="w-full bg-primary text-primary-foreground h-10 rounded-md font-medium hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" [disabled]="loading">
+            @if (loading) {
+              <lucide-icon name="loader" class="h-4 w-4 animate-spin"></lucide-icon>
+              Prenotazione in corso...
+            } @else {
+              Prenota Ora
+            }
           </button>
 
+          @if (errorMessage) {
+            <div class="bg-red-50 border border-red-200 text-red-800 text-xs rounded p-3 flex items-center gap-2">
+              <lucide-icon name="alert-circle" class="h-4 w-4 flex-shrink-0"></lucide-icon>
+              {{ errorMessage }}
+            </div>
+          }
+
           @if (purchaseSuccess) {
-            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded p-3 text-center font-semibold">
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded p-3 text-center font-semibold flex items-center justify-center gap-2">
+              <lucide-icon name="check-circle" class="h-4 w-4 flex-shrink-0"></lucide-icon>
               🎉 Ordine completato! Controlla i tuoi biglietti.
             </div>
           }
+
+          <div class="border-t border-border pt-4 text-xs text-muted-foreground space-y-1">
+            <p class="font-semibold">Posti disponibili: {{ event.available_slots }}/{{ event.total_slots }}</p>
+            @if (event.available_slots === 0) {
+              <p class="text-destructive font-semibold">❌ Evento esaurito</p>
+            } @else if (event.available_slots < 5) {
+              <p class="text-yellow-600 font-semibold">⚠️ Solo {{ event.available_slots }} posti rimasti!</p>
+            }
+          </div>
         </div>
       </div>
 
